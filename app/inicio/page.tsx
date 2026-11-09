@@ -1,5 +1,7 @@
 "use client";
 
+import { useEffect, useState } from "react";
+
 import {
   LogOut,
   Tv2,
@@ -13,17 +15,36 @@ import {
 } from "lucide-react";
 
 export default function HomePage() {
+  const [catalogCounts, setCatalogCounts] = useState<Record<string, number>>({});
+  const [isAdmin, setIsAdmin] = useState(false);
+
+  useEffect(() => {
+    fetch("/api/catalog", { cache: "no-store" })
+      .then(async (response) => {
+        if (!response.ok) return null;
+        return response.json();
+      })
+      .then((data) => {
+        if (!data) return;
+        const nextCounts: Record<string, number> = {};
+        for (const category of data.categories || []) nextCounts[category.name] = category.count;
+        setCatalogCounts(nextCounts);
+        setIsAdmin(Boolean(data.canImport));
+      })
+      .catch(() => undefined);
+  }, []);
+
   const seriesCategories = [
     {
       name: "Crunchyroll",
-      count: 228,
+      count: catalogCounts["Crunchyroll"] ?? 0,
       description: "Animes e séries do catálogo Crunchyroll.",
       accent: "from-orange-500/20 via-red-500/10 to-transparent",
       icon: Play
     },
     {
       name: "Funimation Now",
-      count: 26,
+      count: catalogCounts["Funimation Now"] ?? 0,
       description: "Títulos disponíveis na categoria Funimation Now.",
       accent: "from-violet-500/20 via-fuchsia-500/10 to-transparent",
       icon: Tv2
@@ -40,6 +61,7 @@ export default function HomePage() {
           </a>
           <div className="flex items-center gap-3 sm:gap-5">
             <span className="hidden text-xs font-semibold tracking-[.14em] text-zinc-500 sm:inline">SEU UNIVERSO DE ANIMES</span>
+            {isAdmin && <a href="/admin/catalogo" className="rounded-lg border border-white/10 px-3 py-2 text-xs font-semibold text-zinc-300 transition hover:border-red-500/40 hover:text-white">Gerenciar catálogo</a>}
             <form action="/api/auth/logout" method="post">
               <button className="flex items-center gap-2 rounded-lg border border-white/10 px-3 py-2 text-xs text-zinc-300 transition hover:border-red-500/50 hover:text-white" aria-label="Sair da conta">
                 <LogOut size={15} /> <span className="hidden sm:inline">Sair</span>
@@ -77,7 +99,7 @@ export default function HomePage() {
               <h2 className="text-2xl font-bold tracking-tight sm:text-3xl">Séries e animes</h2>
               <p className="mt-2 text-sm text-zinc-500">As duas categorias escolhidas para a primeira integração.</p>
             </div>
-            <span className="rounded-full border border-white/10 px-3 py-1.5 text-[11px] font-semibold text-zinc-400">254 itens na origem</span>
+            <span className="rounded-full border border-white/10 px-3 py-1.5 text-[11px] font-semibold text-zinc-400">Catálogo conectado</span>
           </div>
 
           <div className="grid gap-4 md:grid-cols-2">
@@ -89,13 +111,13 @@ export default function HomePage() {
                   <div className="relative">
                     <div className="flex items-start justify-between gap-4">
                       <div className="flex h-12 w-12 items-center justify-center rounded-xl border border-white/10 bg-black/30 text-white"><Icon size={22} /></div>
-                      <span className="rounded-full border border-amber-400/20 bg-amber-400/[.07] px-3 py-1.5 text-[10px] font-bold tracking-[.1em] text-amber-200">INTEGRAÇÃO PENDENTE</span>
+                      <span className="rounded-full border border-amber-400/20 bg-amber-400/[.07] px-3 py-1.5 text-[10px] font-bold tracking-[.1em] text-amber-200">CATÁLOGO</span>
                     </div>
                     <h3 className="mt-7 text-xl font-bold">{category.name}</h3>
                     <p className="mt-2 max-w-sm text-sm leading-6 text-zinc-400">{category.description}</p>
                     <div className="mt-7 flex items-end justify-between border-t border-white/[.08] pt-5">
-                      <div><p className="text-3xl font-black tabular-nums">{category.count}</p><p className="mt-1 text-[10px] font-semibold tracking-[.16em] text-zinc-500">ITENS NA ORIGEM</p></div>
-                      <span className="inline-flex items-center gap-2 text-xs font-semibold text-zinc-400">Em preparação <ArrowUpRight size={15} /></span>
+                      <div><p className="text-3xl font-black tabular-nums">{category.count}</p><p className="mt-1 text-[10px] font-semibold tracking-[.16em] text-zinc-500">ITENS CADASTRADOS</p></div>
+                      <span className="inline-flex items-center gap-2 text-xs font-semibold text-zinc-400">Ver catálogo <ArrowUpRight size={15} /></span>
                     </div>
                   </div>
                 </article>
