@@ -48,7 +48,7 @@ async function validateIptvAccount(username: string, password: string) {
   }
 }
 
-async function syncSubscriberCatalog(sql: ReturnType<typeof neon>, userId: string, playlistUrl: string) {
+async function syncSubscriberCatalog(sql: any, userId: string, playlistUrl: string) {
   const parsedUrl = validatePlaylistUrl(playlistUrl);
   if (!parsedUrl) throw new Error("URL M3U individual inválida.");
 
