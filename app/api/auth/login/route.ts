@@ -71,7 +71,8 @@ async function syncSubscriberCatalog(sql: ReturnType<typeof neon>, userId: strin
   if (items.length > 5000) throw new Error("Playlist excede o limite de 5.000 itens.");
 
   const categories = await sql`SELECT id, name FROM catalog_categories WHERE name IN ('Crunchyroll', 'Funimation Now')`;
-  const categoryIds = new Map(categories.map((category: { id: string; name: string }) => [category.name, category.id]));
+  const categoryRows = categories as unknown as Array<{ id: string; name: string }>;
+  const categoryIds = new Map(categoryRows.map((category) => [category.name, category.id]));
   if (!categoryIds.has("Crunchyroll") || !categoryIds.has("Funimation Now")) {
     throw new Error("Categorias iniciais não encontradas.");
   }
