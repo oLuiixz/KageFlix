@@ -82,9 +82,9 @@ async function syncSubscriberCatalog(sql: any, userId: string, playlistUrl: stri
   if (!response.ok) throw new Error(`A playlist respondeu HTTP ${response.status}.`);
 
   const declaredLength = Number(response.headers.get("content-length") || 0);
-  if (declaredLength > 15 * 1024 * 1024) throw new Error("Playlist excede 15 MB.");
+  if (declaredLength > 50 * 1024 * 1024) throw new Error("Playlist excede 50 MB.");
   const playlist = await response.text();
-  if (playlist.length > 15 * 1024 * 1024) throw new Error("Playlist excede 15 MB.");
+  if (playlist.length > 50 * 1024 * 1024) throw new Error("Playlist excede 50 MB.");
   if (!playlist.trimStart().startsWith("#EXTM3U")) throw new Error("Resposta M3U inválida.");
 
   const items = parseM3U(playlist);
