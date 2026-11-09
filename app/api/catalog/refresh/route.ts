@@ -7,7 +7,7 @@ import { decryptPrivateValue, encryptStreamUrl, parseM3U, sourceItemKey } from "
 export const runtime = "nodejs";
 export const maxDuration = 60;
 const COOKIE = "kageflix_session";
-const MAX_PLAYLIST_CHARS = 15 * 1024 * 1024;
+const MAX_PLAYLIST_CHARS = 50 * 1024 * 1024;
 const MAX_ITEMS = 5000;
 
 export async function POST() {
@@ -34,9 +34,9 @@ export async function POST() {
     const response = await fetch(playlistUrl, { cache: "no-store", redirect: "error", signal: AbortSignal.timeout(30000), headers: { Accept: "audio/x-mpegurl, application/vnd.apple.mpegurl, text/plain, */*" } });
     if (!response.ok) throw new Error("O servidor da lista respondeu com erro HTTP " + response.status + ".");
     const declaredLength = Number(response.headers.get("content-length") || 0);
-    if (declaredLength > MAX_PLAYLIST_CHARS) throw new Error("A lista excede o limite de 15 MB.");
+    if (declaredLength > MAX_PLAYLIST_CHARS) throw new Error("A lista excede o limite de 50 MB.");
     const playlist = await response.text();
-    if (playlist.length > MAX_PLAYLIST_CHARS) throw new Error("A lista excede o limite de 15 MB.");
+    if (playlist.length > MAX_PLAYLIST_CHARS) throw new Error("A lista excede o limite de 50 MB.");
     if (!playlist.trimStart().startsWith("#EXTM3U")) throw new Error("O servidor não retornou uma lista M3U válida.");
     const items = parseM3U(playlist);
     if (!items.length) {
