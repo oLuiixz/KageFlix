@@ -11,7 +11,8 @@ import {
   Construction,
   Sparkles,
   ArrowUpRight,
-  LibraryBig
+  LibraryBig,
+  Settings
 } from "lucide-react";
 
 export default function HomePage() {
@@ -62,6 +63,7 @@ export default function HomePage() {
           <div className="flex items-center gap-3 sm:gap-5">
             <span className="hidden text-xs font-semibold tracking-[.14em] text-zinc-500 sm:inline">SEU UNIVERSO DE ANIMES</span>
             {isAdmin && <a href="/admin/catalogo" className="rounded-lg border border-white/10 px-3 py-2 text-xs font-semibold text-zinc-300 transition hover:border-red-500/40 hover:text-white">Gerenciar catálogo</a>}
+            <a href="/configuracoes" className="inline-flex items-center gap-2 rounded-lg border border-white/10 px-3 py-2 text-xs font-semibold text-zinc-300 transition hover:border-red-500/40 hover:text-white"><Settings size={15} /> <span className="hidden sm:inline">Configurações</span></a>
             <form action="/api/auth/logout" method="post">
               <button className="flex items-center gap-2 rounded-lg border border-white/10 px-3 py-2 text-xs text-zinc-300 transition hover:border-red-500/50 hover:text-white" aria-label="Sair da conta">
                 <LogOut size={15} /> <span className="hidden sm:inline">Sair</span>
