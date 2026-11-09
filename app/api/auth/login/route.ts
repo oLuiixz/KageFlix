@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { neon } from "@neondatabase/serverless";
 import bcrypt from "bcryptjs";
+import { createHash } from "node:crypto";
 import { SignJWT } from "jose";
 
 export const runtime = "nodejs";
@@ -12,9 +13,11 @@ export async function POST(request: NextRequest) {
     const body = await request.json();
     const username = body?.username;
     const password = body?.password;
+    const deviceId = body?.deviceId;
+    const deviceLabel = typeof body?.deviceLabel === "string" ? body.deviceLabel.slice(0, 120) : "Dispositivo";
 
     if (typeof username !== "string" || typeof password !== "string" ||
-        !username.trim() || !password || username.length > 80 || password.length > 200) {
+        !username.trim() || !password || username.length > 80 || password.length > 200 || typeof deviceId !== "string" || !/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(deviceId)) {
       return NextResponse.json({ error: "Informe usuário e senha válidos." }, { status: 400 });
     }
 
@@ -45,6 +48,19 @@ export async function POST(request: NextRequest) {
 
     if (!user || !user.is_active || !passwordMatches) {
       return NextResponse.json({ error: "Usuário ou senha incorretos." }, { status: 401 });
+    }
+
+    const deviceKeyHash = createHash("sha256").update(deviceId).digest("hex");
+    const deviceRows = await sql`
+      INSERT INTO user_devices (user_id, device_key_hash, device_label)
+      VALUES (${user.id}, ${deviceKeyHash}, ${deviceLabel || "Dispositivo"})
+      ON CONFLICT (user_id, device_key_hash) DO UPDATE
+        SET device_label = EXCLUDED.device_label, last_seen_at = NOW()
+        WHERE user_devices.revoked_at IS NULL
+      RETURNING id
+    `;
+    if (!deviceRows.length) {
+      return NextResponse.json({ error: "Este dispositivo não está autorizado. Entre em contato com o administrador." }, { status: 403 });
     }
 
     const token = await new SignJWT({
