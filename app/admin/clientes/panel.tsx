@@ -13,6 +13,7 @@ export default function ClientsPanel() {
   const [importing, setImporting] = useState("");
   const [error, setError] = useState("");
   const [notice, setNotice] = useState("");
+  const [createdCredentials, setCreatedCredentials] = useState<{ username: string; password: string } | null>(null);
   const [form, setForm] = useState({ displayName: "", username: "", password: "", playlistUrl: "" });
 
   const load = useCallback(async () => {
@@ -30,7 +31,7 @@ export default function ClientsPanel() {
 
   async function createClient(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setSaving(true); setError(""); setNotice("");
+    setSaving(true); setError(""); setNotice(""); setCreatedCredentials(null);
     try {
       const response = await fetch("/api/admin/clients", {
         method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(form)
@@ -38,6 +39,7 @@ export default function ClientsPanel() {
       const data = await response.json();
       if (!response.ok) throw new Error(data.error || "Não foi possível cadastrar o cliente.");
       setNotice(`Cliente ${data.client.displayName} cadastrado. A M3U foi armazenada criptografada no Neon.`);
+      setCreatedCredentials({ username: form.username, password: form.password });
       setForm({ displayName: "", username: "", password: "", playlistUrl: "" });
       await load();
     } catch (e) { setError(e instanceof Error ? e.message : "Falha ao cadastrar cliente."); }
@@ -77,6 +79,8 @@ export default function ClientsPanel() {
             <div className="sm:col-span-2 flex flex-col gap-3 border-t border-white/[.08] pt-5 sm:flex-row sm:items-center sm:justify-between"><p className="text-xs leading-5 text-zinc-500">Por segurança, neste momento são aceitas URLs dos domínios xmrs2.top e newx2.top. A senha é armazenada somente como hash.</p><button type="submit" disabled={saving} className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#E50914] px-5 py-3 text-sm font-bold text-white transition hover:bg-red-600 disabled:opacity-50">{saving ? <LoaderCircle size={16} className="animate-spin" /> : <Plus size={16} />} {saving ? "Cadastrando..." : "Cadastrar cliente"}</button></div>
           </form>
         </section>
+
+        {createdCredentials && <section className="mt-5 rounded-2xl border border-emerald-500/20 bg-emerald-500/[.06] p-5"><p className="text-sm font-bold text-emerald-200">Acesso criado. Guarde estes dados agora:</p><div className="mt-3 grid gap-3 sm:grid-cols-2"><div><p className="text-[10px] font-bold tracking-wider text-emerald-200/60">USUÁRIO</p><p className="mt-1 select-all font-mono text-sm text-white">{createdCredentials.username}</p></div><div><p className="text-[10px] font-bold tracking-wider text-emerald-200/60">SENHA</p><p className="mt-1 select-all font-mono text-sm text-white">{createdCredentials.password}</p></div></div><p className="mt-3 text-xs text-emerald-100/60">A senha não será salva em texto puro nem poderá ser recuperada depois que esta tela for fechada.</p></section>}
 
         {(error || notice) && <div className={`mt-5 flex items-start gap-2 rounded-xl border p-4 text-sm ${error ? "border-red-500/20 bg-red-500/10 text-red-200" : "border-emerald-500/20 bg-emerald-500/10 text-emerald-200"}`} role={error ? "alert" : "status"}>{error ? <ShieldAlert size={17} className="mt-0.5 shrink-0" /> : <CheckCircle2 size={17} className="mt-0.5 shrink-0" />}{error || notice}</div>}
 
