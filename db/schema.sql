@@ -11,6 +11,17 @@ CREATE TABLE IF NOT EXISTS users (
 );
 CREATE INDEX IF NOT EXISTS users_active_username_idx ON users (LOWER(username)) WHERE is_active = TRUE;
 
+CREATE TABLE IF NOT EXISTS catalog_categories (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  name TEXT NOT NULL UNIQUE,
+  media_type TEXT NOT NULL DEFAULT 'series' CHECK (media_type IN ('series', 'movie')),
+  is_enabled BOOLEAN NOT NULL DEFAULT TRUE,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+INSERT INTO catalog_categories (name, media_type, is_enabled)
+VALUES ('Crunchyroll', 'series', TRUE), ('Funimation Now', 'series', TRUE)
+ON CONFLICT (name) DO NOTHING;
+
 CREATE TABLE IF NOT EXISTS user_iptv_sources (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID NOT NULL UNIQUE REFERENCES users(id) ON DELETE CASCADE,
