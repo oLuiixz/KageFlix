@@ -108,7 +108,7 @@ function buildSubscriberPlaylistUrl(username: string, password: string) {
   url.searchParams.set("username", username);
   url.searchParams.set("password", password);
   url.searchParams.set("type", "m3u_plus");
-  url.searchParams.set("output", "m");
+  url.searchParams.set("output", "mpegts");
   return validatePlaylistUrl(url.toString())?.toString() ?? null;
 }
 export async function POST(request: NextRequest) {
