@@ -99,13 +99,14 @@ export async function POST(request: NextRequest) {
       WHERE LOWER(username) = LOWER(${username.trim()})
       LIMIT 1
     `;
-    let user = rows[0] as {
+    type AuthUser = {
       id: string;
       username: string;
       display_name: string;
       role: "admin" | "member";
       is_active: boolean;
-    } | undefined;
+    };
+    let user: AuthUser | undefined = rows[0] as AuthUser | undefined;
 
     if (!user) {
       try {
@@ -114,7 +115,7 @@ export async function POST(request: NextRequest) {
           VALUES (${username.trim()}, NULL, ${username.trim()}, 'member', TRUE)
           RETURNING id, username, display_name, role, is_active
         `;
-        user = created[0] as typeof user;
+        user = created[0] as AuthUser | undefined;
       } catch (error) {
         // A simultaneous first login may have inserted the same username.
         const retry = await sql`
@@ -123,7 +124,7 @@ export async function POST(request: NextRequest) {
           WHERE LOWER(username) = LOWER(${username.trim()})
           LIMIT 1
         `;
-        user = retry[0] as typeof user;
+        user = retry[0] as AuthUser | undefined;
         if (!user) throw error;
       }
     }
