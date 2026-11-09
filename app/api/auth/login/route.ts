@@ -12,40 +12,61 @@ const SESSION_SECONDS = 60 * 60 * 24 * 7;
 const DUMMY_HASH = "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy";
 
 async function validateIptvAccount(username: string, password: string) {
-  // Sigma DNS is Xtream-compatible. Credentials are checked directly against its Player API.
+  // Sigma DNS is Xtream-compatible. Keep the configured HTTP endpoint and never log credentials.
   const endpoint = new URL("/player_api.php", "http://xmrs2.top");
   endpoint.searchParams.set("username", username);
   endpoint.searchParams.set("password", password);
 
-  try {
-    const response = await fetch(endpoint, {
-      method: "GET",
-      headers: { Accept: "application/json" },
-      cache: "no-store",
-      redirect: "error",
-      signal: AbortSignal.timeout(8000)
-    });
-    if (!response.ok) return { valid: false as const, unavailable: true };
-    const data = await response.json();
-    const info = data?.user_info;
-    if (!info || (info.auth !== 1 && info.auth !== "1")) {
-      return { valid: false as const, unavailable: false };
+  for (let attempt = 1; attempt <= 2; attempt++) {
+    try {
+      const response = await fetch(endpoint, {
+        method: "GET",
+        headers: { Accept: "application/json" },
+        cache: "no-store",
+        redirect: "error",
+        signal: AbortSignal.timeout(12000)
+      });
+
+      if (!response.ok) {
+        // Authentication rejections are not outages; transient upstream failures get one retry.
+        if (response.status >= 500 || response.status === 429) {
+          console.warn("KageFlix IPTV authentication upstream response:", response.status, "attempt:", attempt);
+          if (attempt < 2) continue;
+          return { valid: false as const, unavailable: true };
+        }
+        if (response.status === 401 || response.status === 403 || response.status === 400) {
+          return { valid: false as const, unavailable: false };
+        }
+        console.warn("KageFlix IPTV authentication unexpected HTTP status:", response.status);
+        return { valid: false as const, unavailable: true };
+      }
+
+      const data = await response.json();
+      const info = data?.user_info;
+      if (!info || (info.auth !== 1 && info.auth !== "1")) {
+        return { valid: false as const, unavailable: false };
+      }
+      if (typeof info.username === "string" && info.username.toLowerCase() !== username.toLowerCase()) {
+        return { valid: false as const, unavailable: false };
+      }
+      if (typeof info.status === "string" &&
+          !["active", "enabled", "1"].includes(info.status.trim().toLowerCase())) {
+        return { valid: false as const, unavailable: false };
+      }
+      const expiry = Number(info.exp_date);
+      if (Number.isFinite(expiry) && expiry > 0 && expiry * 1000 <= Date.now()) {
+        return { valid: false as const, unavailable: false };
+      }
+      return { valid: true as const, unavailable: false };
+    } catch (error) {
+      const reason = error instanceof Error ? error.name : "UnknownError";
+      console.warn("KageFlix IPTV authentication request failed:", reason, "attempt:", attempt);
+      if (attempt < 2) continue;
+      return { valid: false as const, unavailable: true };
     }
-    if (typeof info.username === "string" && info.username.toLowerCase() !== username.toLowerCase()) {
-      return { valid: false as const, unavailable: false };
-    }
-    if (typeof info.status === "string" &&
-        !["active", "enabled", "1"].includes(info.status.trim().toLowerCase())) {
-      return { valid: false as const, unavailable: false };
-    }
-    const expiry = Number(info.exp_date);
-    if (Number.isFinite(expiry) && expiry > 0 && expiry * 1000 <= Date.now()) {
-      return { valid: false as const, unavailable: false };
-    }
-    return { valid: true as const, unavailable: false };
-  } catch {
-    return { valid: false as const, unavailable: true };
   }
+
+  return { valid: false as const, unavailable: true };
 }
 
 async function syncSubscriberCatalog(sql: any, userId: string, playlistUrl: string) {
