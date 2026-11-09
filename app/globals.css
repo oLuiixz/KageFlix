@@ -1,0 +1,20 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+:root { color-scheme: dark; --background:#080808; --foreground:#f7f7f7; --muted:#929292; --red:#e50914; }
+* { box-sizing:border-box; }
+html,body { min-height:100%; }
+body { margin:0; background:var(--background); color:var(--foreground); font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; }
+button,input { font:inherit; }
+::selection { background:rgba(229,9,20,.35); color:white; }
+.login-scene { position:relative; min-height:100svh; overflow:hidden; isolation:isolate; background:radial-gradient(ellipse at 78% 45%,rgba(115,0,8,.30),transparent 38%),radial-gradient(ellipse at 10% 90%,rgba(65,0,5,.24),transparent 35%),linear-gradient(115deg,#080808 0%,#0c090a 52%,#100708 100%); }
+.login-scene:before { content:""; position:absolute; inset:0; z-index:-1; opacity:.22; background-image:linear-gradient(rgba(255,255,255,.025) 1px,transparent 1px),linear-gradient(90deg,rgba(255,255,255,.025) 1px,transparent 1px); background-size:54px 54px; mask-image:linear-gradient(to bottom,black,transparent 88%); }
+.login-scene:after { content:""; position:absolute; z-index:-1; width:560px; height:560px; right:-220px; top:8%; border:1px solid rgba(229,9,20,.17); border-radius:50%; box-shadow:0 0 0 55px rgba(229,9,20,.025),0 0 0 110px rgba(229,9,20,.02),0 0 110px rgba(229,9,20,.12); }
+.login-card { background:linear-gradient(145deg,rgba(22,22,22,.96),rgba(12,12,12,.96)); border:1px solid rgba(255,255,255,.09); box-shadow:0 32px 100px rgba(0,0,0,.48),0 0 70px rgba(229,9,20,.07); backdrop-filter:blur(18px); }
+.login-input { width:100%; height:54px; border:1px solid #303030; border-radius:10px; background:#0b0b0b; color:#fff; outline:none; padding:0 15px; transition:border-color .2s,box-shadow .2s,background .2s; }
+.login-input:focus { border-color:rgba(229,9,20,.85); box-shadow:0 0 0 3px rgba(229,9,20,.12); background:#0e0b0b; }
+.login-input::placeholder { color:#666; }
+.login-submit { display:flex; align-items:center; justify-content:center; gap:10px; width:100%; height:54px; border:0; border-radius:10px; color:white; font-weight:750; letter-spacing:.02em; background:linear-gradient(105deg,#b9000b,#ed101c 55%,#c9000c); box-shadow:0 10px 28px rgba(229,9,20,.2); transition:transform .2s,filter .2s,box-shadow .2s; cursor:pointer; }
+.login-submit:hover { filter:brightness(1.12); transform:translateY(-1px); box-shadow:0 14px 34px rgba(229,9,20,.3); }
+.login-submit:disabled { opacity:.65; cursor:wait; transform:none; }
+.brand-mark { display:inline-flex; align-items:center; justify-content:center; width:40px; height:40px; border-radius:11px; color:white; background:#e50914; box-shadow:0 8px 25px rgba(229,9,20,.3); }
