@@ -15,10 +15,16 @@ export default function LoginPage() {
     setError("");
     setLoading(true);
     try {
+      let deviceId = localStorage.getItem("kageflix_device_id");
+      if (!deviceId) {
+        deviceId = crypto.randomUUID();
+        localStorage.setItem("kageflix_device_id", deviceId);
+      }
+      const deviceLabel = `${navigator.platform || "Dispositivo"} · ${navigator.userAgent.slice(0, 80)}`;
       const response = await fetch("/api/auth/login", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ username: username.trim(), password })
+        body: JSON.stringify({ username: username.trim(), password, deviceId, deviceLabel })
       });
       const data = await response.json();
       if (!response.ok) {
