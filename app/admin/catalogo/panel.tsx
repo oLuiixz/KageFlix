@@ -100,6 +100,7 @@ export default function CatalogImportPanel() {
             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
             <p className="max-w-xl text-xs leading-5 text-zinc-500">A importação atualiza os itens existentes sem duplicá-los. Somente um administrador autenticado pode iniciar o processo.</p>
             <button onClick={importPlaylist} disabled={loading || importing || !selectedUserId} className="inline-flex shrink-0 items-center justify-center gap-2 rounded-xl bg-[#E50914] px-5 py-3 text-sm font-bold text-white shadow-[0_8px_24px_rgba(229,9,20,.2)] transition hover:bg-red-600 disabled:cursor-not-allowed disabled:opacity-50"><RefreshCw size={16} className={importing ? "animate-spin" : ""} />{importing ? "Importando playlist..." : "Importar playlist M3U"}</button>
+            </div>
           </div>
         </section>
       </div>
