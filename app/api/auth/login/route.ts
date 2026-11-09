@@ -3,9 +3,10 @@ import { neon } from "@neondatabase/serverless";
 import bcrypt from "bcryptjs";
 import { createHash } from "node:crypto";
 import { SignJWT } from "jose";
-import { encryptPrivateValue, validatePlaylistUrl } from "@/lib/catalog";
+import { encryptPrivateValue, encryptStreamUrl, parseM3U, sourceItemKey, validatePlaylistUrl } from "@/lib/catalog";
 
 export const runtime = "nodejs";
+export const maxDuration = 60;
 const COOKIE = "kageflix_session";
 const SESSION_SECONDS = 60 * 60 * 24 * 7;
 const DUMMY_HASH = "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy";
@@ -45,6 +46,60 @@ async function validateIptvAccount(username: string, password: string) {
   } catch {
     return { valid: false as const, unavailable: true };
   }
+}
+
+async function syncSubscriberCatalog(sql: ReturnType<typeof neon>, userId: string, playlistUrl: string) {
+  const parsedUrl = validatePlaylistUrl(playlistUrl);
+  if (!parsedUrl) throw new Error("URL M3U individual inválida.");
+
+  const response = await fetch(parsedUrl, {
+    cache: "no-store",
+    redirect: "error",
+    signal: AbortSignal.timeout(25000),
+    headers: { Accept: "audio/x-mpegurl, application/vnd.apple.mpegurl, text/plain, */*" }
+  });
+  if (!response.ok) throw new Error(`A playlist respondeu HTTP ${response.status}.`);
+
+  const declaredLength = Number(response.headers.get("content-length") || 0);
+  if (declaredLength > 15 * 1024 * 1024) throw new Error("Playlist excede 15 MB.");
+  const playlist = await response.text();
+  if (playlist.length > 15 * 1024 * 1024) throw new Error("Playlist excede 15 MB.");
+  if (!playlist.trimStart().startsWith("#EXTM3U")) throw new Error("Resposta M3U inválida.");
+
+  const items = parseM3U(playlist);
+  if (!items.length) throw new Error("A playlist não contém itens nos grupos Crunchyroll ou Funimation Now.");
+  if (items.length > 5000) throw new Error("Playlist excede o limite de 5.000 itens.");
+
+  const categories = await sql`SELECT id, name FROM catalog_categories WHERE name IN ('Crunchyroll', 'Funimation Now')`;
+  const categoryIds = new Map(categories.map((category: { id: string; name: string }) => [category.name, category.id]));
+  if (!categoryIds.has("Crunchyroll") || !categoryIds.has("Funimation Now")) {
+    throw new Error("Categorias iniciais não encontradas.");
+  }
+
+  let imported = 0;
+  for (const item of items) {
+    const categoryId = categoryIds.get(item.groupTitle);
+    if (!categoryId) continue;
+    const encryptedStream = encryptStreamUrl(item.streamUrl);
+    await sql`
+      INSERT INTO user_catalog_items (
+        user_id, category_id, title, encrypted_stream_url, stream_url_iv, stream_url_auth_tag,
+        logo_url, tvg_id, tvg_name, source_item_key, group_title, media_type, metadata,
+        is_available, updated_at
+      ) VALUES (
+        ${userId}, ${categoryId}, ${item.title}, ${encryptedStream.encrypted}, ${encryptedStream.iv}, ${encryptedStream.authTag},
+        ${item.logoUrl}, ${item.tvgId}, ${item.tvgName}, ${sourceItemKey(item.streamUrl)},
+        ${item.groupTitle}, 'series', ${JSON.stringify({ source: "m3u" })}::jsonb, TRUE, NOW()
+      )
+      ON CONFLICT (user_id, category_id, source_item_key) DO UPDATE SET
+        title = EXCLUDED.title, encrypted_stream_url = EXCLUDED.encrypted_stream_url,
+        stream_url_iv = EXCLUDED.stream_url_iv, stream_url_auth_tag = EXCLUDED.stream_url_auth_tag,
+        logo_url = EXCLUDED.logo_url, tvg_id = EXCLUDED.tvg_id, tvg_name = EXCLUDED.tvg_name,
+        group_title = EXCLUDED.group_title, media_type = 'series', is_available = TRUE, updated_at = NOW()
+    `;
+    imported++;
+  }
+  return imported;
 }
 
 function buildSubscriberPlaylistUrl(username: string, password: string) {
@@ -145,6 +200,17 @@ export async function POST(request: NextRequest) {
         updated_at = NOW()
     `;
 
+    // Like a streaming app, connect and refresh this subscriber's own playlist on every login.
+    // A catalog outage must not prevent a valid IPTV subscriber from entering the app.
+    let catalogSync: { status: "synced" | "failed"; imported?: number } = { status: "failed" };
+    try {
+      const imported = await syncSubscriberCatalog(sql, user.id, playlistUrl);
+      catalogSync = { status: "synced", imported };
+    } catch (syncError) {
+      const reason = syncError instanceof Error ? syncError.message : "unknown";
+      console.error("KageFlix automatic catalog sync failed:", reason);
+    }
+
     const deviceKeyHash = createHash("sha256").update(deviceId).digest("hex");
     const deviceRows = await sql`
       INSERT INTO user_devices (user_id, device_key_hash, device_label)
@@ -171,7 +237,7 @@ export async function POST(request: NextRequest) {
 
     await sql`UPDATE users SET last_login_at = NOW(), updated_at = NOW() WHERE id = ${user.id}`;
 
-    const response = NextResponse.json({ success: true });
+    const response = NextResponse.json({ success: true, catalogSync });
     response.cookies.set(COOKIE, token, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
