@@ -1,10 +1,8 @@
 "use client";
 
-import { useState } from "react";
 import {
   LogOut,
   Tv2,
-  Clapperboard,
   Play,
   Film,
   Layers3,
@@ -15,8 +13,6 @@ import {
 } from "lucide-react";
 
 export default function HomePage() {
-  const [showNotice, setShowNotice] = useState(false);
-
   const seriesCategories = [
     {
       name: "Crunchyroll",
