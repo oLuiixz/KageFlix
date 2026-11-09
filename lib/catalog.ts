@@ -70,7 +70,7 @@ export function parseM3U(playlist: string): ParsedPlaylistItem[] {
     if (line.startsWith("#") || !pending) continue;
     try {
       const parsed = new URL(line);
-      if (parsed.protocol !== "http:" && parsed.protocol !== "https:") { pending = null; continue; }
+      if (parsed.protocol !== "http:") { pending = null; continue; }
       items.push({
         title: pending.title.slice(0, 500),
         groupTitle: pending.group,
@@ -91,7 +91,7 @@ function safeHttpUrl(value: string | null): string | null {
   if (!value) return null;
   try {
     const parsed = new URL(value);
-    return parsed.protocol === "http:" || parsed.protocol === "https:" ? parsed.toString() : null;
+    return parsed.protocol === "http:" ? parsed.toString() : null;
   } catch { return null; }
 }
 
@@ -100,7 +100,7 @@ export function validatePlaylistUrl(value: unknown): URL | null {
   try {
     const url = new URL(value);
     const allowedHosts = new Set(["xmrs2.top", "newx2.top"]);
-    if (!["http:", "https:"].includes(url.protocol) || !allowedHosts.has(url.hostname.toLowerCase())) return null;
+    if (url.protocol !== "http:" || !allowedHosts.has(url.hostname.toLowerCase())) return null;
     if (url.username || url.password) return null;
     return url;
   } catch { return null; }
