@@ -16,10 +16,7 @@ async function validateIptvAccount(playlistUrlValue: string, username: string, p
 
   // The stored M3U belongs to this exact subscriber. Its credentials are encrypted in Neon.
   const storedUsername = playlistUrl.searchParams.get("username");
-  const storedPassword = playlistUrl.searchParams.get("password");
-  if (!storedUsername || !storedPassword ||
-      storedUsername.toLowerCase() !== username.toLowerCase() ||
-      storedPassword !== password) {
+  if (!storedUsername || storedUsername.toLowerCase() !== username.toLowerCase()) {
     return { valid: false as const, unavailable: false };
   }
 
@@ -45,7 +42,10 @@ async function validateIptvAccount(playlistUrlValue: string, username: string, p
     if (typeof info.username === "string" && info.username.toLowerCase() !== username.toLowerCase()) {
       return { valid: false as const, unavailable: false };
     }
-    if (typeof info.status !== "string" || info.status.toLowerCase() !== "active") {
+    // Some Xtream-compatible panels omit status and rely on auth=1.
+    // If status is present, reject only explicitly inactive/blocked/expired states.
+    if (typeof info.status === "string" &&
+        !["active", "enabled", "1"].includes(info.status.trim().toLowerCase())) {
       return { valid: false as const, unavailable: false };
     }
     const expiry = Number(info.exp_date);
