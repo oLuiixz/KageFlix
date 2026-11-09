@@ -41,6 +41,27 @@ export default function LoginPage() {
 
   return (
     <main className="login-scene flex min-h-screen flex-col">
+      {loading && (
+        <div className="fixed inset-0 z-50 flex min-h-screen items-center justify-center bg-[#070707]/95 px-6 backdrop-blur-xl" role="status" aria-live="polite">
+          <div className="w-full max-w-md text-center">
+            <div className="relative mx-auto mb-8 flex h-24 w-24 items-center justify-center">
+              <span className="absolute inset-0 rounded-full border-2 border-white/10" />
+              <span className="absolute inset-0 animate-spin rounded-full border-2 border-transparent border-t-[#E50914] border-r-[#E50914]/50" />
+              <Tv2 size={34} className="text-[#E50914]" />
+            </div>
+            <p className="text-[10px] font-bold tracking-[.28em] text-[#ff6870]">KAGEFLIX</p>
+            <h2 className="mt-3 text-2xl font-black tracking-tight text-white sm:text-3xl">Conectando sua conta</h2>
+            <p className="mx-auto mt-3 max-w-sm text-sm leading-6 text-zinc-400">
+              Estamos validando seu acesso. No primeiro acesso, sua lista é baixada e preparada automaticamente. Isso acontece uma única vez.
+            </p>
+            <div className="mx-auto mt-8 flex max-w-xs items-center justify-center gap-2">
+              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#E50914]" />
+              <span className="text-xs font-medium text-zinc-500">Aguarde, estamos preparando tudo...</span>
+            </div>
+          </div>
+        </div>
+      )}
+
       <header className="relative z-10 flex items-center justify-between px-6 py-6 sm:px-10 lg:px-16">
         <a href="/" className="flex items-center gap-3" aria-label="KageFlix início">
           <span className="brand-mark"><Tv2 size={21} strokeWidth={2.5} /></span>
@@ -90,7 +111,7 @@ export default function LoginPage() {
             </div>
             {error && <div role="alert" className="rounded-lg border border-red-500/25 bg-red-500/10 px-4 py-3 text-sm text-red-300">{error}</div>}
             <button type="submit" disabled={loading || !username.trim() || !password} className="login-submit mt-2">
-              {loading ? "Validando acesso..." : <>Entrar na KageFlix <ArrowRight size={17} /></>}
+              {loading ? "Conectando..." : <>Entrar na KageFlix <ArrowRight size={17} /></>}
             </button>
           </form>
           <div className="mt-7 flex items-start gap-3 border-t border-white/[.08] pt-6">
