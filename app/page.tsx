@@ -44,21 +44,51 @@ export default function LoginPage() {
       {loading && (
         <div className="fixed inset-0 z-50 flex min-h-screen items-center justify-center bg-[#070707]/95 px-6 backdrop-blur-xl" role="status" aria-live="polite">
           <div className="w-full max-w-md text-center">
-            <div className="relative mx-auto mb-8 flex h-24 w-24 items-center justify-center">
-              <span className="absolute inset-0 rounded-full border-2 border-white/10" />
-              <span className="absolute inset-0 animate-spin rounded-full border-2 border-transparent border-t-[#E50914] border-r-[#E50914]/50" />
-              <Tv2 size={34} className="text-[#E50914]" />
-            </div>
+            <div className="mover mx-auto mb-12" aria-hidden="true" />
             <p className="text-[10px] font-bold tracking-[.28em] text-[#ff6870]">KAGEFLIX</p>
-            <h2 className="mt-3 text-2xl font-black tracking-tight text-white sm:text-3xl">Conectando sua conta</h2>
+            <h2 className="mt-4 text-2xl font-black tracking-tight text-white sm:text-3xl">Preparando seu universo</h2>
             <p className="mx-auto mt-3 max-w-sm text-sm leading-6 text-zinc-400">
-              Estamos validando seu acesso. No primeiro acesso, sua lista é baixada e preparada automaticamente. Isso acontece uma única vez.
+              Estamos conectando sua conta e preparando sua lista de animes. No primeiro acesso, o catálogo é baixado e organizado automaticamente. Isso acontece uma única vez.
             </p>
-            <div className="mx-auto mt-8 flex max-w-xs items-center justify-center gap-2">
-              <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-[#E50914]" />
-              <span className="text-xs font-medium text-zinc-500">Aguarde, estamos preparando tudo...</span>
-            </div>
+            <p className="mt-7 text-xs font-medium text-zinc-500">Aguarde só mais um instante...</p>
           </div>
+          <style jsx>{`
+            .mover {
+              background: rgba(248, 25, 25, 0.979);
+              height: 10px;
+              width: 80px;
+              border-radius: 10px;
+              position: relative;
+              animation: mover5 2s ease-in-out infinite;
+            }
+            .mover::before,
+            .mover::after {
+              content: '';
+              position: absolute;
+              height: 10px;
+              border-radius: 10px;
+              left: 20px;
+              animation: mover5 2s ease-in-out infinite;
+            }
+            .mover::before {
+              background: rgb(201, 1, 1);
+              top: 20px;
+              width: 50px;
+            }
+            .mover::after {
+              background: rgb(255, 116, 106);
+              top: -20px;
+              width: 60px;
+            }
+            @keyframes mover5 {
+              0% { transform: translateX(30px) scale(1); }
+              50% { transform: translateX(-30px) scale(1.1); }
+              100% { transform: translateX(30px) scale(1); }
+            }
+            @media (prefers-reduced-motion: reduce) {
+              .mover, .mover::before, .mover::after { animation: none; }
+            }
+          `}</style>
         </div>
       )}
 
