@@ -64,7 +64,11 @@ export async function POST(request: NextRequest) {
 
     const items = parseM3U(playlist);
     if (items.length > MAX_ITEMS) throw new Error("A playlist excede o limite de 5.000 itens selecionados.");
-    if (!items.length) throw new Error("Nenhum item encontrado nos grupos Crunchyroll e Funimation Now.");
+    if (!items.length) {
+      const groups = [...new Set(Array.from(playlist.matchAll(/group-title="([^"]*)"/gi), (match) => match[1].trim()).filter(Boolean))].slice(0, 20);
+      const groupHint = groups.length ? ` Grupos encontrados: ${groups.join(" | ")}.` : " A playlist não contém atributos group-title reconhecíveis.";
+      throw new Error("Nenhum item foi identificado nas categorias selecionadas." + groupHint);
+    }
 
     const categories = await sql`SELECT id, name FROM catalog_categories WHERE name IN ('Crunchyroll', 'Funimation Now')`;
     const categoryIds = new Map(categories.map((category) => [String(category.name), String(category.id)]));
