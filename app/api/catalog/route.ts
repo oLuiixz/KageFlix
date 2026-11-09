@@ -16,12 +16,34 @@ async function getSession() {
   } catch { return null; }
 }
 
-export async function GET() {
+export async function GET(request: Request) {
   const session = await getSession();
   if (!session) return NextResponse.json({ error: "Não autenticado." }, { status: 401 });
   if (!process.env.DATABASE_URL) return NextResponse.json({ error: "Banco de dados não configurado." }, { status: 503 });
   try {
     const sql = neon(process.env.DATABASE_URL);
+    const requestedCategory = new URL(request.url).searchParams.get("category");
+    if (requestedCategory) {
+      const categoryName = requestedCategory === "crunchyroll" ? "Crunchyroll"
+        : requestedCategory === "funimation-now" ? "Funimation Now" : null;
+      if (!categoryName) return NextResponse.json({ error: "Categoria não encontrada." }, { status: 404 });
+      const categoryRows = await sql`
+        SELECT id, name FROM catalog_categories WHERE name = ${categoryName} LIMIT 1
+      `;
+      if (!categoryRows.length) return NextResponse.json({ error: "Categoria não encontrada." }, { status: 404 });
+      const items = await sql`
+        SELECT id, title, logo_url, tvg_name
+        FROM user_catalog_items
+        WHERE user_id = ${session.userId}
+          AND category_id = ${categoryRows[0].id}
+          AND is_available = TRUE
+        ORDER BY title ASC
+      `;
+      return NextResponse.json({
+        category: categoryName,
+        items: items.map((item) => ({ id: item.id, title: item.title, logoUrl: item.logo_url, tvgName: item.tvg_name }))
+      }, { headers: { "Cache-Control": "private, no-store" } });
+    }
     const rows = await sql`
       SELECT c.id, c.name, c.media_type, c.is_enabled,
              COUNT(i.id)::int AS item_count
