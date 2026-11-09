@@ -1,11 +1,13 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useParams } from "next/navigation";
 import { ArrowLeft, Play, Tv2, LoaderCircle } from "lucide-react";
 
 type CatalogItem = { id: string; title: string; logoUrl: string | null; tvgName: string | null };
 
-export default function CategoryCatalogPage({ params }: { params: { slug: string } }) {
+export default function CategoryCatalogPage() {
+  const params = useParams<{ slug: string }>();
   const slug = params.slug;
   const category = slug === "crunchyroll" ? "Crunchyroll" : slug === "funimation-now" ? "Funimation Now" : null;
   const [items, setItems] = useState<CatalogItem[]>([]);
