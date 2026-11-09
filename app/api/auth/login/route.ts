@@ -200,15 +200,30 @@ export async function POST(request: NextRequest) {
         updated_at = NOW()
     `;
 
-    // Like a streaming app, connect and refresh this subscriber's own playlist on every login.
-    // A catalog outage must not prevent a valid IPTV subscriber from entering the app.
-    let catalogSync: { status: "synced" | "failed"; imported?: number } = { status: "failed" };
-    try {
-      const imported = await syncSubscriberCatalog(sql, user.id, playlistUrl);
-      catalogSync = { status: "synced", imported };
-    } catch (syncError) {
-      const reason = syncError instanceof Error ? syncError.message : "unknown";
-      console.error("KageFlix automatic catalog sync failed:", reason);
+    // Download the subscriber's playlist only on the first successful setup.
+    // Once catalog items exist, future logins reuse the saved per-user catalog.
+    const existingCatalog = await sql`
+      SELECT COUNT(*)::int AS total
+      FROM user_catalog_items
+      WHERE user_id = ${user.id} AND is_available = TRUE
+    `;
+    const hasCatalog = Number(existingCatalog[0]?.total || 0) > 0;
+    let catalogSync: { status: "downloaded" | "already_ready"; imported?: number } = {
+      status: "already_ready"
+    };
+
+    if (!hasCatalog) {
+      try {
+        const imported = await syncSubscriberCatalog(sql, user.id, playlistUrl);
+        catalogSync = { status: "downloaded", imported };
+        if (imported === 0) throw new Error("Nenhum título válido foi encontrado nas categorias selecionadas.");
+      } catch (syncError) {
+        const reason = syncError instanceof Error ? syncError.message : "Falha desconhecida";
+        console.error("KageFlix first catalog download failed:", reason);
+        return NextResponse.json({
+          error: "Seu acesso foi validado, mas não conseguimos baixar sua lista agora. Tente entrar novamente em instantes."
+        }, { status: 502 });
+      }
     }
 
     const deviceKeyHash = createHash("sha256").update(deviceId).digest("hex");
