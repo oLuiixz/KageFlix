@@ -56,3 +56,16 @@ CREATE INDEX IF NOT EXISTS user_catalog_items_user_category_idx ON user_catalog_
 CREATE INDEX IF NOT EXISTS user_catalog_items_available_idx ON user_catalog_items (user_id, is_available) WHERE is_available = TRUE;
 
 -- No public registration. Admins provision accounts with bcrypt hashes only.
+
+
+CREATE TABLE IF NOT EXISTS user_devices (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+  device_key_hash TEXT NOT NULL,
+  device_label TEXT NOT NULL DEFAULT 'Dispositivo',
+  first_seen_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  last_seen_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  revoked_at TIMESTAMPTZ,
+  UNIQUE (user_id, device_key_hash)
+);
+CREATE INDEX IF NOT EXISTS user_devices_user_last_seen_idx ON user_devices (user_id, last_seen_at DESC);
