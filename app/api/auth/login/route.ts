@@ -40,7 +40,7 @@ export async function POST(request: NextRequest) {
       is_active: boolean;
     } | undefined;
 
-    const dummyHash = "$2a$12$C6UzMDM.H6dfI/f/IKcEe.5b1zjXr5wQvQh8M9yV7Qn0j8z3YV4Gm";
+    const dummyHash = "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy";
     const passwordMatches = await bcrypt.compare(password, user?.password_hash || dummyHash);
 
     if (!user || !user.is_active || !passwordMatches) {
