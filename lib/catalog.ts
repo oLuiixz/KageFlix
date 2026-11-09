@@ -40,8 +40,8 @@ export function encryptStreamUrl(streamUrl: string) {
 
 function normalizeGroup(value: string): ParsedPlaylistItem["groupTitle"] | null {
   const normalized = value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").trim().toLocaleLowerCase("pt-BR");
-  if (normalized === "crunchyroll") return "Crunchyroll";
-  if (normalized === "funimation now") return "Funimation Now";
+  if (normalized.includes("crunchyroll")) return "Crunchyroll";
+  if (normalized.includes("funimation")) return "Funimation Now";
   return null;
 }
 
