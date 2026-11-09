@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { cookies } from "next/headers";
 import { jwtVerify } from "jose";
 import { neon } from "@neondatabase/serverless";
-import bcrypt from "bcryptjs";
 import { encryptPrivateValue, validatePlaylistUrl } from "@/lib/catalog";
 
 export const runtime = "nodejs";
@@ -53,20 +52,23 @@ export async function POST(request: NextRequest) {
 
   const displayName = typeof body.displayName === "string" ? body.displayName.trim() : "";
   const username = typeof body.username === "string" ? body.username.trim() : "";
-  const password = typeof body.password === "string" ? body.password : "";
   const playlistUrl = validatePlaylistUrl(body.playlistUrl);
 
   if (displayName.length < 2 || displayName.length > 100) return NextResponse.json({ error: "Informe o nome do cliente (2 a 100 caracteres)." }, { status: 400 });
-  if (!/^[a-zA-Z0-9._-]{3,40}$/.test(username)) return NextResponse.json({ error: "O usuário deve ter de 3 a 40 caracteres: letras, números, ponto, hífen ou underline." }, { status: 400 });
-  if (password.length < 10 || password.length > 200) return NextResponse.json({ error: "A senha deve ter pelo menos 10 caracteres." }, { status: 400 });
+  if (!/^[a-zA-Z0-9._-]{3,40}$/.test(username)) return NextResponse.json({ error: "O usuário IPTV deve ter de 3 a 40 caracteres: letras, números, ponto, hífen ou underline." }, { status: 400 });
   if (!playlistUrl) return NextResponse.json({ error: "Informe uma URL M3U válida do domínio autorizado do servidor." }, { status: 400 });
+
+  const playlistUsername = playlistUrl.searchParams.get("username");
+  const playlistPassword = playlistUrl.searchParams.get("password");
+  if (!playlistUsername || !playlistPassword || playlistUsername.toLowerCase() !== username.toLowerCase()) {
+    return NextResponse.json({ error: "A URL M3U precisa conter as credenciais do mesmo usuário IPTV informado." }, { status: 400 });
+  }
 
   const sql = neon(process.env.DATABASE_URL);
   try {
-    const passwordHash = await bcrypt.hash(password, 12);
     const [user] = await sql`
       INSERT INTO users (username, password_hash, display_name, role, is_active)
-      VALUES (${username}, ${passwordHash}, ${displayName}, 'member', TRUE)
+      VALUES (${username}, NULL, ${displayName}, 'member', TRUE)
       RETURNING id, username, display_name
     `;
     const encrypted = encryptPrivateValue(playlistUrl.toString(), "user-iptv-playlist-url");
