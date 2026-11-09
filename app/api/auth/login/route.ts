@@ -3,24 +3,15 @@ import { neon } from "@neondatabase/serverless";
 import bcrypt from "bcryptjs";
 import { createHash } from "node:crypto";
 import { SignJWT } from "jose";
-import { decryptPrivateValue, validatePlaylistUrl } from "@/lib/catalog";
+import { encryptPrivateValue, validatePlaylistUrl } from "@/lib/catalog";
 
 export const runtime = "nodejs";
 const COOKIE = "kageflix_session";
 const SESSION_SECONDS = 60 * 60 * 24 * 7;
 const DUMMY_HASH = "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy";
 
-async function validateIptvAccount(playlistUrlValue: string, username: string, password: string) {
-  const playlistUrl = validatePlaylistUrl(playlistUrlValue);
-  if (!playlistUrl) return { valid: false as const, unavailable: false };
-
-  // The stored M3U belongs to this exact subscriber. Its credentials are encrypted in Neon.
-  const storedUsername = playlistUrl.searchParams.get("username");
-  if (!storedUsername || storedUsername.toLowerCase() !== username.toLowerCase()) {
-    return { valid: false as const, unavailable: false };
-  }
-
-  // Sigma's DNS is Xtream-compatible: use its built-in Player API, not a separate API key.
+async function validateIptvAccount(username: string, password: string) {
+  // Sigma DNS is Xtream-compatible. Credentials are checked directly against its Player API.
   const endpoint = new URL("/player_api.php", "http://xmrs2.top");
   endpoint.searchParams.set("username", username);
   endpoint.searchParams.set("password", password);
@@ -42,8 +33,6 @@ async function validateIptvAccount(playlistUrlValue: string, username: string, p
     if (typeof info.username === "string" && info.username.toLowerCase() !== username.toLowerCase()) {
       return { valid: false as const, unavailable: false };
     }
-    // Some Xtream-compatible panels omit status and rely on auth=1.
-    // If status is present, reject only explicitly inactive/blocked/expired states.
     if (typeof info.status === "string" &&
         !["active", "enabled", "1"].includes(info.status.trim().toLowerCase())) {
       return { valid: false as const, unavailable: false };
@@ -58,6 +47,14 @@ async function validateIptvAccount(playlistUrlValue: string, username: string, p
   }
 }
 
+function buildSubscriberPlaylistUrl(username: string, password: string) {
+  const url = new URL("/get.php", "http://xmrs2.top");
+  url.searchParams.set("username", username);
+  url.searchParams.set("password", password);
+  url.searchParams.set("type", "m3u_plus");
+  url.searchParams.set("output", "m");
+  return validatePlaylistUrl(url.toString())?.toString() ?? null;
+}
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
@@ -79,62 +76,73 @@ export async function POST(request: NextRequest) {
     }
 
     const sql = neon(process.env.DATABASE_URL);
-    const rows = await sql`
-      SELECT u.id, u.username, u.password_hash, u.display_name, u.role, u.is_active,
-             s.encrypted_playlist_url, s.playlist_url_iv, s.playlist_url_auth_tag
-      FROM users u
-      LEFT JOIN user_iptv_sources s ON s.user_id = u.id
-      WHERE LOWER(u.username) = LOWER(${username.trim()})
+
+    // First authenticate against Sigma. KageFlix does not require a pre-created customer record.
+    const upstream = await validateIptvAccount(username.trim(), password);
+    if (upstream.unavailable) {
+      return NextResponse.json({ error: "O servidor IPTV está temporariamente indisponível. Tente novamente." }, { status: 503 });
+    }
+    if (!upstream.valid) {
+      return NextResponse.json({ error: "Usuário ou senha incorretos, ou assinatura IPTV expirada/bloqueada." }, { status: 401 });
+    }
+
+    const playlistUrl = buildSubscriberPlaylistUrl(username.trim(), password);
+    if (!playlistUrl) {
+      return NextResponse.json({ error: "Não foi possível preparar a conexão deste usuário." }, { status: 503 });
+    }
+
+    // Automatically provision the KageFlix member after Sigma confirms the credentials.
+    // Preserve existing member IDs/devices; never convert an administrator into a member.
+    let rows = await sql`
+      SELECT id, username, display_name, role, is_active
+      FROM users
+      WHERE LOWER(username) = LOWER(${username.trim()})
       LIMIT 1
     `;
-
-    const user = rows[0] as {
+    let user = rows[0] as {
       id: string;
       username: string;
-      password_hash: string | null;
       display_name: string;
       role: "admin" | "member";
       is_active: boolean;
-      encrypted_playlist_url: Buffer | Uint8Array | null;
-      playlist_url_iv: Buffer | Uint8Array | null;
-      playlist_url_auth_tag: Buffer | Uint8Array | null;
     } | undefined;
 
-    if (!user || !user.is_active) {
-      await bcrypt.compare(password, DUMMY_HASH);
-      return NextResponse.json({ error: "Usuário ou senha incorretos." }, { status: 401 });
-    }
-
-    if (user.role === "admin") {
-      const passwordMatches = await bcrypt.compare(password, user.password_hash || DUMMY_HASH);
-      if (!passwordMatches) {
-        return NextResponse.json({ error: "Usuário ou senha incorretos." }, { status: 401 });
-      }
-    } else {
-      if (!user.encrypted_playlist_url || !user.playlist_url_iv || !user.playlist_url_auth_tag) {
-        return NextResponse.json({ error: "Esta conta ainda não possui uma conexão IPTV configurada." }, { status: 403 });
-      }
-      let playlistUrl: string;
+    if (!user) {
       try {
-        playlistUrl = decryptPrivateValue(
-          Buffer.from(user.encrypted_playlist_url),
-          Buffer.from(user.playlist_url_iv),
-          Buffer.from(user.playlist_url_auth_tag),
-          "user-iptv-playlist-url"
-        );
-      } catch {
-        console.error("KageFlix could not decrypt the subscriber source.");
-        return NextResponse.json({ error: "Não foi possível validar esta conta. Contate o administrador." }, { status: 503 });
-      }
-
-      const upstream = await validateIptvAccount(playlistUrl, user.username, password);
-      if (upstream.unavailable) {
-        return NextResponse.json({ error: "O servidor IPTV está temporariamente indisponível. Tente novamente." }, { status: 503 });
-      }
-      if (!upstream.valid) {
-        return NextResponse.json({ error: "Usuário ou senha incorretos, ou assinatura IPTV expirada/bloqueada." }, { status: 401 });
+        const created = await sql`
+          INSERT INTO users (username, password_hash, display_name, role, is_active)
+          VALUES (${username.trim()}, NULL, ${username.trim()}, 'member', TRUE)
+          RETURNING id, username, display_name, role, is_active
+        `;
+        user = created[0] as typeof user;
+      } catch (error) {
+        // A simultaneous first login may have inserted the same username.
+        const retry = await sql`
+          SELECT id, username, display_name, role, is_active
+          FROM users
+          WHERE LOWER(username) = LOWER(${username.trim()})
+          LIMIT 1
+        `;
+        user = retry[0] as typeof user;
+        if (!user) throw error;
       }
     }
+
+    if (!user || user.role !== "member" || !user.is_active) {
+      return NextResponse.json({ error: "Esta conta não está autorizada a acessar o aplicativo." }, { status: 403 });
+    }
+
+    // Store this subscriber's own M3U encrypted at rest; never return it to the browser.
+    const encrypted = encryptPrivateValue(playlistUrl, "user-iptv-playlist-url");
+    await sql`
+      INSERT INTO user_iptv_sources (user_id, encrypted_playlist_url, playlist_url_iv, playlist_url_auth_tag)
+      VALUES (${user.id}, ${encrypted.encrypted}, ${encrypted.iv}, ${encrypted.authTag})
+      ON CONFLICT (user_id) DO UPDATE SET
+        encrypted_playlist_url = EXCLUDED.encrypted_playlist_url,
+        playlist_url_iv = EXCLUDED.playlist_url_iv,
+        playlist_url_auth_tag = EXCLUDED.playlist_url_auth_tag,
+        updated_at = NOW()
+    `;
 
     const deviceKeyHash = createHash("sha256").update(deviceId).digest("hex");
     const deviceRows = await sql`
