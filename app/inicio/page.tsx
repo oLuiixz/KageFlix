@@ -106,7 +106,7 @@ export default function HomePage() {
             {seriesCategories.map((category) => {
               const Icon = category.icon;
               return (
-                <article key={category.name} className="group relative overflow-hidden rounded-2xl border border-white/[.09] bg-[#111111] p-6 transition duration-300 hover:-translate-y-1 hover:border-red-500/30 hover:bg-[#141111] sm:p-8">
+                <a href={`/catalogo/${category.name === "Crunchyroll" ? "crunchyroll" : "funimation-now"}`} key={category.name} aria-label={`Abrir catálogo ${category.name}`} className="group relative block overflow-hidden rounded-2xl border border-white/[.09] bg-[#111111] p-6 transition duration-300 hover:-translate-y-1 hover:border-red-500/50 hover:bg-[#141111] focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-red-500 sm:p-8">
                   <div className={`pointer-events-none absolute inset-0 bg-gradient-to-br ${category.accent} opacity-80`} />
                   <div className="relative">
                     <div className="flex items-start justify-between gap-4">
@@ -120,7 +120,7 @@ export default function HomePage() {
                       <span className="inline-flex items-center gap-2 text-xs font-semibold text-zinc-400">Ver catálogo <ArrowUpRight size={15} /></span>
                     </div>
                   </div>
-                </article>
+                </a>
               );
             })}
           </div>
