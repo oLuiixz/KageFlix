@@ -23,7 +23,7 @@ export async function GET(request: Request) {
       if (!Array.isArray(data)) throw new Error("O servidor não retornou categorias válidas.");
       const categories = data.map((item: any) => ({
         id: String(item.category_id ?? item.id ?? ""),
-        name: String(item.category_name ?? item.name ?? "Sem categoria").replace(/[\\p{Extended_Pictographic}\\uFE0F]/gu, "").replace(/^\\s*[|·•-]+\\s*|\\s*[|·•-]+\\s*$/g, "").trim() || "Sem categoria",
+        name: String(item.category_name ?? item.name ?? "Sem categoria").replace(/[\p{Extended_Pictographic}\uFE0F]/gu, "").replace(/^\s*[|·•-]+\s*|\s*[|·•-]+\s*$/g, "").trim() || "Sem categoria",
         parentId: item.parent_id == null ? null : String(item.parent_id)
       })).filter(item => item.id);
       return NextResponse.json({ type: kind, categories }, { headers: { "Cache-Control": "private, no-store" } });
