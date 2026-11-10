@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { ArrowRight, ChevronRight, Film, LogOut, Play, Search, Settings, ShieldCheck, Sparkles, Tv2, Layers3 } from "lucide-react";
+import MobileNav from "@/components/mobile-nav";
 
 type CatalogItem = { id: string; title: string; logoUrl: string | null; tvgName: string | null };
 type Category = { name: string; slug: string; count: number; items: CatalogItem[] };
@@ -147,6 +148,7 @@ export default function HomePage() {
         </div>
       </section>
       <footer className="kf-footer px-5 py-7 text-center sm:px-8">© {new Date().getFullYear()} KAGEFLIX · TODOS OS DIREITOS RESERVADOS</footer>
-    </main>
+        <MobileNav active="home" />
+</main>
   );
 }
