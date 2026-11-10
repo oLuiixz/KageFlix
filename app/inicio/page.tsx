@@ -63,7 +63,7 @@ export default function HomePage() {
           </a>
           <nav className="hidden items-center gap-8 md:flex">
             <a href="/inicio" aria-current="page" className="kf-nav-link">Início</a>
-            <a href="/iptv" className="kf-nav-link">TV, filmes e séries</a>
+            <a href="/iptv" className="kf-nav-link">Filmes e séries</a>
             <a href="#catalogos" className="kf-nav-link">Animes</a>
           </nav>
           <div className="flex items-center gap-2 sm:gap-3">
@@ -81,6 +81,8 @@ export default function HomePage() {
       </header>
 
       <section className="kf-hero px-5 py-16 sm:px-8 lg:px-12">
+        <img src="https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=2400&q=90" alt="" className="absolute inset-0 -z-20 h-full w-full object-cover object-center"/>
+        <div className="absolute inset-0 -z-10 bg-[linear-gradient(90deg,rgba(7,7,7,.98)_0%,rgba(7,7,7,.88)_34%,rgba(7,7,7,.42)_72%,rgba(7,7,7,.2)_100%),linear-gradient(0deg,#090909_0%,transparent_55%)]"/>
         <div className="mx-auto w-full max-w-[1500px]">
           <div className="max-w-[720px]">
             <div className="mb-5 inline-flex items-center gap-2 text-[10px] font-bold tracking-[.16em] text-[#e6a0a3]">
@@ -139,7 +141,7 @@ export default function HomePage() {
         <div className="kf-panel relative overflow-hidden p-6 sm:p-9">
           <div className="hidden"/>
           <div className="relative flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-4"><div className="grid h-14 w-14 shrink-0 place-items-center rounded-md border border-white/10 bg-[#1b1b1b] text-red-400"><Film size={24}/></div><div><p className="kf-kicker mb-1">EM DESENVOLVIMENTO</p><h3 className="text-lg font-extrabold">Uma nova experiência de filmes</h3><p className="mt-1 max-w-xl text-sm text-zinc-500">Explore canais ao vivo, filmes e séries na sua biblioteca.</p></div></div>
+            <div className="flex items-center gap-4"><div className="grid h-14 w-14 shrink-0 place-items-center rounded-md border border-white/10 bg-[#1b1b1b] text-red-400"><Film size={24}/></div><div><p className="kf-kicker mb-1">EM DESENVOLVIMENTO</p><h3 className="text-lg font-extrabold">Uma nova experiência de filmes</h3><p className="mt-1 max-w-xl text-sm text-zinc-500">Uma seleção especial de filmes está sendo preparada para chegar em breve.</p></div></div>
             <span className="kf-chip w-fit">Em breve</span>
           </div>
         </div>
