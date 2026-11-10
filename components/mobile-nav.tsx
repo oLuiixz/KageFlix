@@ -8,7 +8,7 @@ type Props = { active: "home" | "browse" | "settings" };
 export default function MobileNav({ active }: Props) {
   const links = [
     { id: "home" as const, href: "/inicio", label: "Início", Icon: House },
-    { id: "browse" as const, href: "/iptv", label: "Explorar", Icon: Compass },
+    { id: "browse" as const, href: "/catalogo", label: "Explorar", Icon: Compass },
     { id: "settings" as const, href: "/configuracoes", label: "Ajustes", Icon: Settings },
   ];
   return (
