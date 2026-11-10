@@ -3,6 +3,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "next/navigation";
 import { ArrowLeft, Play, Search, Tv2, LoaderCircle, X, ChevronDown, Clapperboard, Radio } from "lucide-react";
+import MobileNav from "@/components/mobile-nav";
 
 type Kind = "live" | "vod" | "series";
 type Item = { id: string; title: string; poster: string | null; plot: string; year: string | number | null; rating: string | number | null; extension: string | null };
@@ -102,5 +103,6 @@ export default function ExploreCategoryPage() {
     </div>}
     {error && items.length > 0 && <div className="fixed bottom-4 left-4 right-4 z-[60] mx-auto max-w-xl rounded-xl border border-red-500/20 bg-[#241014] p-3 text-xs text-red-200">{error}<button onClick={() => setError("")} className="ml-3 underline">Fechar</button></div>}
     <footer className="kf-footer px-5 py-7 text-center">© {new Date().getFullYear()} KAGEFLIX</footer>
-  </main>;
+      <MobileNav active="browse" />
+</main>;
 }
