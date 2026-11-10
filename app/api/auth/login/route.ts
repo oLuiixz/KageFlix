@@ -3,7 +3,7 @@ import { neon } from "@neondatabase/serverless";
 import bcrypt from "bcryptjs";
 import { createHash } from "node:crypto";
 import { SignJWT } from "jose";
-import { encryptPrivateValue, encryptStreamUrl, parseM3U, sourceItemKey, validatePlaylistUrl } from "@/lib/catalog";
+import { encryptPrivateValue, validatePlaylistUrl } from "@/lib/catalog";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -69,60 +69,6 @@ async function validateIptvAccount(username: string, password: string) {
   return { valid: false as const, unavailable: true };
 }
 
-async function syncSubscriberCatalog(sql: any, userId: string, playlistUrl: string) {
-  const parsedUrl = validatePlaylistUrl(playlistUrl);
-  if (!parsedUrl) throw new Error("URL M3U individual inválida.");
-
-  const response = await fetch(parsedUrl, {
-    cache: "no-store",
-    redirect: "error",
-    signal: AbortSignal.timeout(25000),
-    headers: { Accept: "audio/x-mpegurl, application/vnd.apple.mpegurl, text/plain, */*" }
-  });
-  if (!response.ok) throw new Error(`A playlist respondeu HTTP ${response.status}.`);
-
-  const declaredLength = Number(response.headers.get("content-length") || 0);
-  if (declaredLength > 50 * 1024 * 1024) throw new Error("Playlist excede 50 MB.");
-  const playlist = await response.text();
-  if (playlist.length > 50 * 1024 * 1024) throw new Error("Playlist excede 50 MB.");
-  if (!playlist.trimStart().startsWith("#EXTM3U")) throw new Error("Resposta M3U inválida.");
-
-  const items = parseM3U(playlist);
-  if (!items.length) throw new Error("A playlist não contém itens nos grupos Crunchyroll ou Funimation Now.");
-  if (items.length > 5000) throw new Error("Playlist excede o limite de 5.000 itens.");
-
-  const categories = await sql`SELECT id, name FROM catalog_categories WHERE name IN ('Crunchyroll', 'Funimation Now')`;
-  const categoryRows = categories as unknown as Array<{ id: string; name: string }>;
-  const categoryIds = new Map(categoryRows.map((category) => [category.name, category.id]));
-  if (!categoryIds.has("Crunchyroll") || !categoryIds.has("Funimation Now")) {
-    throw new Error("Categorias iniciais não encontradas.");
-  }
-
-  let imported = 0;
-  for (const item of items) {
-    const categoryId = categoryIds.get(item.groupTitle);
-    if (!categoryId) continue;
-    const encryptedStream = encryptStreamUrl(item.streamUrl);
-    await sql`
-      INSERT INTO user_catalog_items (
-        user_id, category_id, title, encrypted_stream_url, stream_url_iv, stream_url_auth_tag,
-        logo_url, tvg_id, tvg_name, source_item_key, group_title, media_type, metadata,
-        is_available, updated_at
-      ) VALUES (
-        ${userId}, ${categoryId}, ${item.title}, ${encryptedStream.encrypted}, ${encryptedStream.iv}, ${encryptedStream.authTag},
-        ${item.logoUrl}, ${item.tvgId}, ${item.tvgName}, ${sourceItemKey(item.streamUrl)},
-        ${item.groupTitle}, 'series', ${JSON.stringify({ source: "m3u" })}::jsonb, TRUE, NOW()
-      )
-      ON CONFLICT (user_id, category_id, source_item_key) DO UPDATE SET
-        title = EXCLUDED.title, encrypted_stream_url = EXCLUDED.encrypted_stream_url,
-        stream_url_iv = EXCLUDED.stream_url_iv, stream_url_auth_tag = EXCLUDED.stream_url_auth_tag,
-        logo_url = EXCLUDED.logo_url, tvg_id = EXCLUDED.tvg_id, tvg_name = EXCLUDED.tvg_name,
-        group_title = EXCLUDED.group_title, media_type = 'series', is_available = TRUE, updated_at = NOW()
-    `;
-    imported++;
-  }
-  return imported;
-}
 
 function buildSubscriberPlaylistUrl(username: string, password: string) {
   const url = new URL("/get.php", "http://xmrs2.top");
@@ -222,31 +168,9 @@ export async function POST(request: NextRequest) {
         updated_at = NOW()
     `;
 
-    // Download the subscriber's playlist only on the first successful setup.
-    // Once catalog items exist, future logins reuse the saved per-user catalog.
-    const existingCatalog = await sql`
-      SELECT COUNT(*)::int AS total
-      FROM user_catalog_items
-      WHERE user_id = ${user.id} AND is_available = TRUE
-    `;
-    const hasCatalog = Number(existingCatalog[0]?.total || 0) > 0;
-    let catalogSync: { status: "downloaded" | "already_ready"; imported?: number } = {
-      status: "already_ready"
-    };
-
-    if (!hasCatalog) {
-      try {
-        const imported = await syncSubscriberCatalog(sql, user.id, playlistUrl);
-        catalogSync = { status: "downloaded", imported };
-        if (imported === 0) throw new Error("Nenhum título válido foi encontrado nas categorias selecionadas.");
-      } catch (syncError) {
-        const reason = syncError instanceof Error ? syncError.message : "Falha desconhecida";
-        console.error("KageFlix first catalog download failed:", reason);
-        return NextResponse.json({
-          error: "Seu acesso foi validado, mas não conseguimos baixar sua lista agora. Tente entrar novamente em instantes."
-        }, { status: 502 });
-      }
-    }
+    // Login must not download or persist the M3U catalog.
+    // The subscriber's stable playlist URL remains encrypted in user_iptv_sources.
+    const catalogSync = { status: "not_loaded" as const };
 
     const deviceKeyHash = createHash("sha256").update(deviceId).digest("hex");
     const deviceRows = await sql`
