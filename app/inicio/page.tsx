@@ -83,16 +83,16 @@ export default function HomePage() {
       <section className="kf-hero px-5 py-16 sm:px-8 lg:px-12">
         <div className="mx-auto w-full max-w-[1500px]">
           <div className="max-w-[720px]">
-            <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-red-500/25 bg-red-500/[.08] px-4 py-2 text-[10px] font-extrabold tracking-[.2em] text-red-300">
-              <Sparkles size={13}/> SEU STREAMING DE ANIMES
+            <div className="mb-5 inline-flex items-center gap-2 text-[10px] font-bold tracking-[.16em] text-[#e6a0a3]">
+              <Sparkles size={13}/> KAGEFLIX
             </div>
-            <h1 className="kf-title">Histórias que<br/><span className="text-[#ed1722]">merecem ser vividas.</span></h1>
+            <h1 className="kf-title">Seu próximo<br/><span className="text-white">filme começa aqui.</span></h1>
             <p className="mt-6 max-w-[540px] text-sm leading-7 text-zinc-300/75 sm:text-base">
-              Entre em novos universos, descubra grandes aventuras e encontre seu próximo anime favorito em um só lugar.
+              Uma biblioteca completa de entretenimento. Escolha, aperte o play e aproveite.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
               <a href="/iptv" className="kf-primary"><Play size={16} fill="currentColor"/> Explorar IPTV <ArrowRight size={15}/></a>
-              <span className="kf-chip"><ShieldCheck size={14} className="text-red-400"/> Sua conta, seu catálogo</span>
+              <span className="kf-chip"><ShieldCheck size={14} className="text-red-400"/> Seu entretenimento, em um só lugar</span>
             </div>
           </div>
           <div className="mt-14 flex flex-wrap gap-3 border-t border-white/[.09] pt-6">
@@ -105,7 +105,7 @@ export default function HomePage() {
 
       <section id="catalogos" className="mx-auto max-w-[1500px] px-5 py-12 sm:px-8 lg:px-12 lg:py-16">
         <div className="mb-8 flex flex-wrap items-end justify-between gap-4">
-          <div><p className="kf-kicker mb-2">ESCOLHA SUA PRÓXIMA AVENTURA</p><h2 className="kf-section-title">Explore o catálogo</h2><p className="mt-2 text-sm text-zinc-500">Conteúdo organizado de acordo com a lista vinculada à sua conta.</p></div>
+          <div><p className="kf-kicker mb-2">CONTINUE DESCOBRINDO</p><h2 className="kf-section-title">Explore o catálogo</h2><p className="mt-2 text-sm text-zinc-500">Conteúdo organizado de acordo com a lista vinculada à sua conta.</p></div>
           <label className="relative w-full sm:hidden">
             <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500"/>
             <input value={search} onChange={e=>setSearch(e.target.value)} placeholder="Buscar anime..." className="kf-control w-full pl-9 text-sm"/>
@@ -117,7 +117,7 @@ export default function HomePage() {
           filteredCategories.map(category => (
             <div key={category.slug} className="mb-12">
               <div className="mb-5 flex items-end justify-between gap-4">
-                <div><p className="kf-kicker mb-2">KAGEFLIX ORIGINAL COLLECTION</p><h3 className="text-xl font-extrabold tracking-tight sm:text-2xl">{category.name}</h3><p className="mt-1 text-xs text-zinc-500">{category.count.toLocaleString("pt-BR")} títulos no seu catálogo</p></div>
+                <div><p className="kf-kicker mb-2">EM DESTAQUE</p><h3 className="text-xl font-extrabold tracking-tight sm:text-2xl">{category.name}</h3><p className="mt-1 text-xs text-zinc-500">{category.count.toLocaleString("pt-BR")} títulos no seu catálogo</p></div>
                 <a href={`/catalogo/${category.slug}`} className="inline-flex items-center gap-1 text-xs font-bold text-zinc-300 transition hover:text-white">Ver todos <ChevronRight size={15}/></a>
               </div>
               {category.items.length ? <div className="kf-scroll-row">
@@ -137,10 +137,10 @@ export default function HomePage() {
 
       <section id="filmes" className="mx-auto max-w-[1500px] px-5 pb-16 sm:px-8 lg:px-12">
         <div className="kf-panel relative overflow-hidden p-6 sm:p-9">
-          <div className="absolute -right-16 -top-24 h-72 w-72 rounded-full bg-red-600/[.08] blur-3xl"/>
+          <div className="hidden"/>
           <div className="relative flex flex-col gap-5 sm:flex-row sm:items-center sm:justify-between">
-            <div className="flex items-center gap-4"><div className="grid h-14 w-14 shrink-0 place-items-center rounded-2xl border border-white/10 bg-white/[.04] text-red-400"><Film size={24}/></div><div><p className="kf-kicker mb-1">EM DESENVOLVIMENTO</p><h3 className="text-lg font-extrabold">Uma nova experiência de filmes</h3><p className="mt-1 max-w-xl text-sm text-zinc-500">Estamos preparando esta área para ampliar seu universo de entretenimento.</p></div></div>
-            <span className="kf-chip w-fit border-amber-400/20 bg-amber-400/[.06] text-amber-200">Em breve</span>
+            <div className="flex items-center gap-4"><div className="grid h-14 w-14 shrink-0 place-items-center rounded-md border border-white/10 bg-[#1b1b1b] text-red-400"><Film size={24}/></div><div><p className="kf-kicker mb-1">EM DESENVOLVIMENTO</p><h3 className="text-lg font-extrabold">Uma nova experiência de filmes</h3><p className="mt-1 max-w-xl text-sm text-zinc-500">Explore canais ao vivo, filmes e séries na sua biblioteca.</p></div></div>
+            <span className="kf-chip w-fit">Em breve</span>
           </div>
         </div>
       </section>
