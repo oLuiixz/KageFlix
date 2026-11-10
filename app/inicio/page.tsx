@@ -63,8 +63,8 @@ export default function HomePage() {
           </a>
           <nav className="hidden items-center gap-8 md:flex">
             <a href="/inicio" aria-current="page" className="kf-nav-link">Início</a>
+            <a href="/iptv" className="kf-nav-link">TV, filmes e séries</a>
             <a href="#catalogos" className="kf-nav-link">Animes</a>
-            <a href="#filmes" className="kf-nav-link">Filmes</a>
           </nav>
           <div className="flex items-center gap-2 sm:gap-3">
             <label className="relative hidden sm:block">
@@ -91,7 +91,7 @@ export default function HomePage() {
               Entre em novos universos, descubra grandes aventuras e encontre seu próximo anime favorito em um só lugar.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-3">
-              <a href="#catalogos" className="kf-primary"><Play size={16} fill="currentColor"/> Explorar catálogo <ArrowRight size={15}/></a>
+              <a href="/iptv" className="kf-primary"><Play size={16} fill="currentColor"/> Explorar IPTV <ArrowRight size={15}/></a>
               <span className="kf-chip"><ShieldCheck size={14} className="text-red-400"/> Sua conta, seu catálogo</span>
             </div>
           </div>
