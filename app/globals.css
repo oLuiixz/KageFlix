@@ -85,7 +85,7 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid 
 /* KageFlix mobile-first portrait experience */
 .kf-mobile-nav { display:none; }
 @media (max-width: 767px) {
-  body { padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
+  .kf-app { padding-bottom: calc(76px + env(safe-area-inset-bottom)); }
   .kf-header { background:rgba(9,9,9,.96); }
   .kf-header > div { height:62px !important; padding-left:18px !important; padding-right:18px !important; }
   .kf-brand { font-size:16px; letter-spacing:.09em; }
