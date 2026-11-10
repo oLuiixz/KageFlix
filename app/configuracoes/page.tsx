@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import { ArrowLeft, RefreshCw, Settings, UserRound, CalendarDays, ShieldCheck, ListRestart, LoaderCircle, Clock3, Wifi, WifiOff, MonitorPlay } from "lucide-react";
+import MobileNav from "@/components/mobile-nav";
 
 type SettingsData = {
   account: { username: string; displayName: string; createdAt: string | null; lastLoginAt: string | null; playlistConnected: boolean };
@@ -101,6 +102,7 @@ export default function SettingsPage() {
         ) : <p role="alert" className="rounded-xl border border-red-500/20 bg-red-500/[.07] p-4 text-sm text-red-200">{error || "Não foi possível carregar as configurações."}</p>}
       </div>
       <footer className="kf-footer px-5 py-7 text-center">© {new Date().getFullYear()} KAGEFLIX · TODOS OS DIREITOS RESERVADOS</footer>
-    </main>
+          <MobileNav active="settings" />
+      </main>
   );
 }
