@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, Clapperboard, Search, Tv2, LoaderCircle, ChevronRight, Layers3, Play, Sparkles } from "lucide-react";
+import MobileNav from "@/components/mobile-nav";
 
 type Kind = "vod" | "series";
 type Category = { id: string; name: string; parentId: string | null };
@@ -97,5 +98,6 @@ export default function IptvLibraryPage() {
       </a>)}</div>}
     </section>
     <footer className="kf-footer px-5 py-7 text-center">© {new Date().getFullYear()} KAGEFLIX</footer>
-  </main>;
+      <MobileNav active="browse" />
+</main>;
 }
