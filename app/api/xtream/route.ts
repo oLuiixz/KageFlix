@@ -23,7 +23,7 @@ export async function GET(request: Request) {
       if (!Array.isArray(data)) throw new Error("O servidor não retornou categorias válidas.");
       const categories = data.map((item: any) => ({
         id: String(item.category_id ?? item.id ?? ""),
-        name: String(item.category_name ?? item.name ?? "Sem categoria"),
+        name: String(item.category_name ?? item.name ?? "Sem categoria").replace(/[\\p{Extended_Pictographic}\\uFE0F]/gu, "").replace(/^\\s*[|·•-]+\\s*|\\s*[|·•-]+\\s*$/g, "").trim() || "Sem categoria",
         parentId: item.parent_id == null ? null : String(item.parent_id)
       })).filter(item => item.id);
       return NextResponse.json({ type: kind, categories }, { headers: { "Cache-Control": "private, no-store" } });
@@ -69,7 +69,7 @@ export async function GET(request: Request) {
 
     return NextResponse.json({ error: "Ação não suportada." }, { status: 400 });
   } catch (error) {
-    const message = error instanceof Error ? error.message : "Falha ao consultar catálogo IPTV.";
+    const message = error instanceof Error ? error.message.replace(/Xtream|IPTV/gi, "catálogo") : "Falha ao consultar o catálogo.";
     const status = message.includes("Sessão") ? 401 : 502;
     console.error("KageFlix Xtream catalog error:", message);
     return NextResponse.json({ error: message }, { status });
