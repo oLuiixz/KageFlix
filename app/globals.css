@@ -127,13 +127,13 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid 
   .kf-app > section.relative.isolate .mt-12 button { font-size:13px; }
   .kf-app > section.mx-auto { padding:28px 18px 30px !important; }
   .kf-app > section.mx-auto h2 { font-size:23px; }
-  .kf-app > section.mx-auto .grid.md\\:grid-cols-2 { grid-template-columns:minmax(0,1fr); gap:14px; }
-  .kf-app > section.mx-auto .grid.md\\:grid-cols-2 > a { min-height:270px; border-radius:9px; }
+  .kf-app > section.mx-auto .grid.md\:grid-cols-2 { grid-template-columns:minmax(0,1fr); gap:14px; }
+  .kf-app > section.mx-auto .grid.md\:grid-cols-2 > a { min-height:270px; border-radius:9px; }
   .kf-app > section.border-b { padding:30px 18px !important; }
   .kf-app > section.border-b h1 { font-size:30px; }
   .kf-app .grid.grid-cols-2 { gap:18px 10px; }
   .kf-app .grid.grid-cols-2 .kf-poster-art { aspect-ratio:2/2.85; }
-  .kf-app .kf-poster .min-h-\\[66px\\] { padding:8px 2px; min-height:54px; }
+  .kf-app .kf-poster .min-h-\[66px\] { padding:8px 2px; min-height:54px; }
   .kf-app [role="dialog"] { align-items:flex-end; padding:0; }
   .kf-app [role="dialog"] > div { max-height:92svh; border-radius:16px 16px 0 0; }
 }
