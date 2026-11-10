@@ -1,6 +1,5 @@
 "use client";
 import { useCallback,useEffect,useMemo,useState } from "react";
-import { useSearchParams } from "next/navigation";
 import { ArrowLeft,Clapperboard,Search,Tv2,LoaderCircle,ChevronRight,Play,Sparkles } from "lucide-react";
 import MobileNav from "@/components/mobile-nav";
 type Kind="vod"|"series";
@@ -9,8 +8,9 @@ const sections:{id:Kind;title:string;description:string;icon:typeof Tv2;image:st
 {id:"vod",title:"Filmes",description:"Grandes histórias para assistir quando quiser.",icon:Clapperboard,image:"https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=1600&q=85"},
 {id:"series",title:"Séries",description:"Temporadas completas para maratonar.",icon:Tv2,image:"https://images.unsplash.com/photo-1522869635100-9f4c5e86aa37?auto=format&fit=crop&w=1600&q=85"}];
 export default function IptvLibraryPage(){
-const params=useSearchParams();const [kind,setKind]=useState<Kind>(params.get("type")==="series"?"series":"vod");const [categories,setCategories]=useState<Category[]>([]);const [loading,setLoading]=useState(true);const [error,setError]=useState("");const [search,setSearch]=useState("");
+const [kind,setKind]=useState<Kind>("vod");const [categories,setCategories]=useState<Category[]>([]);const [loading,setLoading]=useState(true);const [error,setError]=useState("");const [search,setSearch]=useState("");
 const load=useCallback(async(k:Kind)=>{setLoading(true);setError("");setCategories([]);try{const r=await fetch(`/api/xtream?type=${k}&action=categories`,{cache:"no-store"});const d=await r.json();if(!r.ok)throw new Error(d.error||"Falha ao consultar o servidor Xtream.");if(!Array.isArray(d.categories))throw new Error("Resposta inválida do servidor Xtream.");setCategories(d.categories);}catch(e){setError(e instanceof Error?e.message:"Não foi possível carregar o catálogo.");}finally{setLoading(false);}},[]);
+useEffect(()=>{if(window.location.search.includes("type=series"))setKind("series");},[]);
 useEffect(()=>{void load(kind);},[kind,load]);
 const filtered=useMemo(()=>categories.filter(c=>c.name.toLocaleLowerCase("pt-BR").includes(search.toLocaleLowerCase("pt-BR"))),[categories,search]);
 const section=sections.find(s=>s.id===kind)!;const Icon=section.icon;
