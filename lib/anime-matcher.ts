@@ -62,14 +62,6 @@ async function getAnimeTitleIndex(): Promise<Set<string>> {
   return titleIndex;
 }
 
-function metadataSuggestsAnime(item: Record<string, unknown>): boolean {
-  const genre = typeof item.genre === "string" ? item.genre.toLocaleLowerCase("pt-BR") : "";
-  const country = typeof item.country === "string" ? item.country.toLocaleLowerCase("pt-BR") : "";
-  const normalizedGenre = genre.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  const normalizedCountry = country.normalize("NFD").replace(/[\u0300-\u036f]/g, "");
-  return /\banime\b/.test(normalizedGenre) ||
-    (/(animation|animacao)/.test(normalizedGenre) && /(japan|japao|japanese|japones)/.test(normalizedCountry));
-}
 
 export async function filterAnimeItems<T extends { title?: string } & Record<string, unknown>>(items: T[]): Promise<T[]> {
   let index: Set<string>;
@@ -77,11 +69,11 @@ export async function filterAnimeItems<T extends { title?: string } & Record<str
     index = await getAnimeTitleIndex();
   } catch (error) {
     console.error("KageFlix anime index unavailable; using provider metadata:", error);
-    return items.filter(item => knownAnimeTitles.has(normalizeAnimeTitle(typeof item.title === "string" ? item.title : "")) || metadataSuggestsAnime(item));
+    return items.filter(item => knownAnimeTitles.has(normalizeAnimeTitle(typeof item.title === "string" ? item.title : "")));
   }
 
   return items.filter(item => {
     const title = typeof item.title === "string" ? normalizeAnimeTitle(item.title) : "";
-    return (title.length >= 2 && index.has(title)) || metadataSuggestsAnime(item);
+    return title.length >= 2 && index.has(title);
   });
 }
