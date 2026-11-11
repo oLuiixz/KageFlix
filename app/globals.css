@@ -242,3 +242,33 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid 
 .kf-anime-poster:hover { transform:translateY(-5px); border-color:rgba(255,255,255,.4); }
 .kf-discover-banner { box-shadow:0 18px 60px rgba(110,0,20,.18); }
 @media (max-width:767px) { .kf-anime-hero { min-height:620px; padding-bottom:46px; } .kf-anime-hero > img { object-position:62% center; } .kf-anime-hero h1 { font-size:clamp(42px,12vw,58px); } .kf-feature-card { min-height:280px; } }
+
+
+/* Movie catalog cards: poster artwork flush with the card's top and side edges */
+.kf-poster--movie {
+  padding: 0 !important;
+  overflow: hidden !important;
+  border-radius: 17px !important;
+}
+.kf-poster--movie > .kf-poster-art {
+  display: block !important;
+  position: relative !important;
+  width: calc(100% + 2px) !important;
+  margin: -1px -1px 0 !important;
+  padding: 0 !important;
+  aspect-ratio: 2 / 3 !important;
+  border-radius: 16px 16px 0 0 !important;
+  overflow: hidden !important;
+}
+.kf-poster--movie > .kf-poster-art > img {
+  position: absolute !important;
+  inset: 0 !important;
+  display: block !important;
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+  object-position: center !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: 0 !important;
+}
