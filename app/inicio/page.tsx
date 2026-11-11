@@ -5,7 +5,7 @@ import MobileNav from "@/components/mobile-nav";
 const animeArt = [
  {title:"Demon Slayer",tag:"AÇÃO • FANTASIA",image:"https://img.anime2you.de/2021/07/demon-slayer-s2-visual.jpg",tone:"from-red-950/80"},
  {title:"Jujutsu Kaisen",tag:"SOBRENATURAL",image:"https://as01.epimg.net/meristation/imagenes/2022/08/22/noticias/1661161775_656366_1661164198_noticia_normal.jpg",tone:"from-indigo-950/80"},
- {title:"One Piece",tag:"AVENTURA",image:"https://static.promediateknologi.id/crop/0x0%3A0x0/1200x0/webp/photo/p1/183/2024/10/06/Screenshot_1000-2189387561.jpg",tone:"from-orange-950/80"},
+ {title:"One Piece",tag:"AVENTURA",image:"https://cdn.myanimelist.net/images/anime/6/73245.jpg",tone:"from-orange-950/80"},
  {title:"My Hero Academia",tag:"AÇÃO • HERÓIS",image:"https://es.web.img2.acsta.net/pictures/23/04/06/09/18/0802333.jpg",tone:"from-blue-950/80"}
 ];
 export default function HomePage(){
