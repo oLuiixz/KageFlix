@@ -309,3 +309,58 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid 
 @media (prefers-reduced-motion: reduce) {
   .kf-search-input { animation: none; }
 }
+
+
+/* KageFlix title loading animation */
+.kf-title-loading {
+  display: flex;
+  min-height: 13rem;
+  width: 100%;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1.25rem;
+  color: #a1a1aa;
+  font-size: .875rem;
+}
+.kf-loader {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+}
+.kf-loader-slider {
+  position: relative;
+  width: 16px;
+  height: 68px;
+  overflow: hidden;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 30px;
+  background: rgba(255,255,255,.9);
+  box-shadow: 8px 8px 16px rgba(0,0,0,.18), -5px -5px 14px rgba(255,255,255,.04), inset 3px 3px 7px rgba(0,0,0,.1);
+}
+.kf-loader-slider::before {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #e50914;
+  box-shadow: 0 0 12px rgba(229,9,20,.35), 0 360px 0 340px #e50914;
+  content: "";
+  animation: kf-loader-rise 2.5s ease-in-out infinite;
+}
+.kf-loader-slider--1::before { animation-delay: -.5s; }
+.kf-loader-slider--2::before { animation-delay: -1s; }
+.kf-loader-slider--3::before { animation-delay: -1.5s; }
+.kf-loader-slider--4::before { animation-delay: -2s; }
+@keyframes kf-loader-rise {
+  0% { transform: translateY(250px); filter: hue-rotate(0deg); }
+  50% { transform: translateY(0); }
+  100% { transform: translateY(250px); filter: hue-rotate(180deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .kf-loader-slider::before { animation: none; transform: translateY(0); }
+}
