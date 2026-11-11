@@ -72,22 +72,28 @@ function isExpectedFormat(type: string, kind: CatalogKind): boolean {
     : ["TV", "OVA", "ONA", "SPECIAL"].includes(type);
 }
 
-function isHighConfidenceMatch(matches: TitleMatch[] | undefined, kind: CatalogKind): boolean {
+function isHighConfidenceMatch(matches: TitleMatch[] | undefined, kind: CatalogKind, normalizedTitle: string): boolean {
   if (!matches?.length) return false;
   const expected = matches.filter(match => isExpectedFormat(match.type, kind));
   if (!expected.length) return false;
 
   // Canonical titles are stronger identifiers than translated synonyms.
   const canonical = matches.filter(match => match.canonical && isExpectedFormat(match.type, kind));
-  if (canonical.length === 1 && matches.every(match => match.recordTitle === canonical[0].recordTitle)) return true;
+  if (
+    canonical.length === 1
+    && matches.every(match => match.recordTitle === canonical[0].recordTitle)
+    && (normalizedTitle.split(" ").length >= 2 || fallbackIndex.has(normalizedTitle))
+  ) return true;
 
   // Generic translations such as "Sunny", "Sugar" or "Scandal" can collide
   // with live-action catalog titles. Synonyms must be unique and cross-sourced.
   const records = new Set(matches.map(match => match.recordTitle));
+  const aliasWords = normalizedTitle.split(" ").filter(Boolean);
   return records.size === 1
     && expected.length === matches.length
     && expected[0].sourceCount >= 2
-    && normalizeAnimeTitle(matches[0].recordTitle).split(" ").filter(Boolean).length >= 2;
+    && aliasWords.length >= 2
+    && normalizedTitle.length >= 10;
 }
 
 export async function filterAnimeItems<T extends { title?: string } & Record<string, unknown>>(items: T[], kind: CatalogKind): Promise<T[]> {
@@ -105,7 +111,7 @@ export async function filterAnimeItems<T extends { title?: string } & Record<str
   return items.filter(item => {
     const title = typeof item.title === "string" ? normalizeAnimeTitle(item.title) : "";
     const types = index.get(title);
-    if (isHighConfidenceMatch(types, kind)) return true;
+    if (isHighConfidenceMatch(types, kind, title)) return true;
     const fallbackType = fallbackIndex.get(title);
     return kind === "vod" ? fallbackType === "MOVIE" : ["TV", "OVA", "ONA", "SPECIAL"].includes(fallbackType ?? "");
   });
