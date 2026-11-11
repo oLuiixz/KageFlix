@@ -3,7 +3,7 @@ import { getXtreamContext, safeKind, xtreamRequest } from "@/lib/xtream";
 import { filterAnimeItems } from "@/lib/anime-matcher";
 
 export const runtime = "nodejs";
-export const maxDuration = 30;
+export const maxDuration = 60;
 
 const actions = {
   live: { categories: "get_live_categories", items: "get_live_streams" },
@@ -30,6 +30,50 @@ export async function GET(request: Request) {
       return NextResponse.json({ type: kind, categories }, { headers: { "Cache-Control": "private, no-store" } });
     }
 
+    if (action === "categories") {
+      const data = await xtreamRequest<unknown>(username, password, actions[kind].categories);
+      if (!Array.isArray(data)) throw new Error("O servidor não retornou categorias válidas.");
+      const categories = data.map((item: any) => ({
+        id: String(item.category_id ?? item.id ?? ""),
+        name: String(item.category_name ?? item.name ?? "Sem categoria").replace(/[\p{Extended_Pictographic}\uFE0F]/gu, "").replace(/^\s*[|·•-]+\s*|\s*[|·•-]+\s*$/g, "").trim() || "Sem categoria",
+        parentId: item.parent_id == null ? null : String(item.parent_id)
+      })).filter(item => item.id);
+      return NextResponse.json({ type: kind, categories }, { headers: { "Cache-Control": "private, no-store" } });
+    }
+
+    if (action === "anime-categories" && (kind === "vod" || kind === "series")) {
+      const data = await xtreamRequest<any[]>(username, password, actions[kind].categories);
+      if (!Array.isArray(data)) throw new Error("O servidor não retornou categorias válidas.");
+      const categories = data.map((item: any) => ({
+        id: String(item.category_id ?? item.id ?? ""),
+        name: String(item.category_name ?? item.name ?? "Sem categoria").replace(/[\\p{Extended_Pictographic}\\uFE0F]/gu, "").replace(/^\\s*[|·•-]+\\s*|\\s*[|·•-]+\\s*$/g, "").trim() || "Sem categoria",
+        parentId: item.parent_id == null ? null : String(item.parent_id)
+      })).filter(item => item.id);
+      const scanned: Array<{ category: (typeof categories)[number]; animeCount: number }> = [];
+      let cursor = 0;
+      const worker = async () => {
+        while (cursor < categories.length) {
+          const index = cursor++;
+          const category = categories[index];
+          try {
+            const list = await xtreamRequest<any[]>(username, password, actions[kind].items, { category_id: category.id });
+            const candidates = (Array.isArray(list) ? list : []).map((entry: any) => ({
+              title: String(entry.name ?? entry.title ?? ""),
+              genre: typeof entry.genre === "string" ? entry.genre : "",
+              country: typeof entry.country === "string" ? entry.country : typeof entry.country_name === "string" ? entry.country_name : ""
+            }));
+            const anime = await filterAnimeItems(candidates);
+            if (anime.length) scanned.push({ category, animeCount: anime.length });
+          } catch (error) {
+            console.warn("KageFlix category scan skipped:", category.name, error);
+          }
+        }
+      };
+      await Promise.all(Array.from({ length: Math.min(8, categories.length) }, () => worker()));
+      const ordered = scanned.sort((left, right) => left.category.name.localeCompare(right.category.name, "pt-BR"));
+      return NextResponse.json({ type: kind, categories: ordered.map(entry => ({ ...entry.category, animeCount: entry.animeCount })) }, { headers: { "Cache-Control": "private, no-store" } });
+    }
+
     if (action === "search" && kind === "series") {
       const query = (params.get("query") || "").trim();
       if (query.length < 2 || query.length > 100) return NextResponse.json({ error: "Busca inválida." }, { status: 400 });
@@ -37,19 +81,24 @@ export async function GET(request: Request) {
       const wanted = normalize(query);
       const categoryData = await xtreamRequest<any[]>(username, password, actions.series.categories);
       const categories = Array.isArray(categoryData) ? categoryData : [];
-      const lists = await Promise.all(categories.map(async (category: any) => {
-        const categoryId = String(category.category_id ?? category.id ?? "");
-        if (!categoryId) return [];
-        const data = await xtreamRequest<any[]>(username, password, actions.series.items, { category_id: categoryId });
-        return (Array.isArray(data) ? data : []).map((entry: any) => ({
-          id: String(entry.series_id ?? entry.stream_id ?? entry.id ?? ""),
-          title: String(entry.name ?? entry.title ?? ""),
-          poster: typeof (entry.cover ?? entry.stream_icon) === "string" ? (entry.cover ?? entry.stream_icon) : null,
-          plot: typeof entry.plot === "string" ? entry.plot : "",
-          categoryId,
-          categoryName: String(category.category_name ?? category.name ?? "")
-        })).filter((entry: any) => /^\d+$/.test(entry.id));
-      }));
+      const lists: any[][] = [];
+      for (let offset = 0; offset < categories.length; offset += 4) {
+        const batch = await Promise.all(categories.slice(offset, offset + 4).map(async (category: any) => {
+          const categoryId = String(category.category_id ?? category.id ?? "");
+          if (!categoryId) return [];
+          const data = await xtreamRequest<any[]>(username, password, actions.series.items, { category_id: categoryId });
+          return (Array.isArray(data) ? data : []).map((entry: any) => ({
+            id: String(entry.series_id ?? entry.stream_id ?? entry.id ?? ""),
+            title: String(entry.name ?? entry.title ?? ""),
+            poster: typeof (entry.cover ?? entry.stream_icon) === "string" ? (entry.cover ?? entry.stream_icon) : null,
+            plot: typeof entry.plot === "string" ? entry.plot : "",
+            categoryId,
+            categoryName: String(category.category_name ?? category.name ?? "")
+          })).filter((entry: any) => /^\\d+$/.test(entry.id));
+        }));
+        lists.push(...batch);
+        if (batch.flat().some((entry: any) => normalize(entry.title) === wanted)) break;
+      }
       const matches = lists.flat().filter((entry: any) => normalize(entry.title).includes(wanted));
       matches.sort((left: any, right: any) => Number(normalize(right.title) === wanted) - Number(normalize(left.title) === wanted));
       if (!matches.length) return NextResponse.json({ error: "Este título não foi encontrado nas séries disponíveis." }, { status: 404 });
