@@ -32,7 +32,7 @@ export async function GET(request: Request) {
     if (action === "search" && kind === "series") {
       const query = (params.get("query") || "").trim();
       if (query.length < 2 || query.length > 100) return NextResponse.json({ error: "Busca inválida." }, { status: 400 });
-      const normalize = (value: string) => value.normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLocaleLowerCase("pt-BR").replace(/[^a-z0-9]+/g, " ").trim();
+      const normalize = (value: string) => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("pt-BR").replace(/[^a-z0-9]+/g, " ").trim();
       const wanted = normalize(query);
       const categoryData = await xtreamRequest<any[]>(username, password, actions.series.categories);
       const categories = (Array.isArray(categoryData) ? categoryData : []).filter((entry: any) => {
