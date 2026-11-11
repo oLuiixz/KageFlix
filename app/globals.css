@@ -48,6 +48,48 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid 
 .login-submit:disabled { opacity:.65; cursor:wait; transform:none; }
 .brand-mark { display:inline-flex; align-items:center; justify-content:center; width:40px; height:40px; border-radius:11px; color:white; background:#e50914; box-shadow:0 8px 25px rgba(229,9,20,.3); }
 
+
+/* Poster artwork must meet the card edges without an inner gutter */
+.kf-poster {
+  display:block;
+  width:100%;
+  min-width:0;
+  padding:0 !important;
+  margin:0;
+  appearance:none;
+  -webkit-appearance:none;
+  border:1px solid rgba(255,255,255,.22);
+  overflow:hidden;
+}
+.kf-poster-art {
+  display:block;
+  position:relative;
+  width:100%;
+  margin:0;
+  padding:0;
+  border:0;
+  border-radius:16px 16px 0 0;
+  aspect-ratio:2/3;
+  overflow:hidden;
+  line-height:0;
+}
+.kf-poster-art > img {
+  display:block;
+  width:100%;
+  height:100%;
+  min-width:100%;
+  max-width:none;
+  object-fit:cover;
+  object-position:center;
+  margin:0;
+  padding:0;
+  border:0;
+}
+.kf-poster-art > div {
+  width:100%;
+  height:100%;
+}
+
 /* KageFlix | cinematic streaming interface */
 .kf-app { min-height:100svh; background:#090909; color:#f5f5f1; }
 .kf-header { position:sticky; top:0; z-index:40; border-bottom:1px solid rgba(255,255,255,.08); background:rgba(9,9,9,.94); backdrop-filter:blur(16px); }
