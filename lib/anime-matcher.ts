@@ -77,23 +77,28 @@ function isHighConfidenceMatch(matches: TitleMatch[] | undefined, kind: CatalogK
   const expected = matches.filter(match => isExpectedFormat(match.type, kind));
   if (!expected.length) return false;
 
-  // Canonical titles are stronger identifiers than translated synonyms.
+  // Exact canonical names are reliable, but short names are too ambiguous
+  // for a catalogue assembled from many unrelated provider categories.
   const canonical = matches.filter(match => match.canonical && isExpectedFormat(match.type, kind));
   if (
     canonical.length === 1
     && matches.every(match => match.recordTitle === canonical[0].recordTitle)
-    && (normalizedTitle.split(" ").length >= 2 || fallbackIndex.has(normalizedTitle))
+    && (normalizedTitle.split(" ").filter(Boolean).length >= 2 || fallbackIndex.has(normalizedTitle))
   ) return true;
 
-  // Generic translations such as "Sunny", "Sugar" or "Scandal" can collide
-  // with live-action catalog titles. Synonyms must be unique and cross-sourced.
+  // Series titles need a much stronger alias signal than movie titles:
+  // localized/translated aliases often collide with live-action productions.
   const records = new Set(matches.map(match => match.recordTitle));
   const aliasWords = normalizedTitle.split(" ").filter(Boolean);
+  const minWords = kind === "series" ? 3 : 2;
+  const minLength = kind === "series" ? 16 : 10;
+  const minSources = kind === "series" ? 3 : 2;
+
   return records.size === 1
     && expected.length === matches.length
-    && expected[0].sourceCount >= 2
-    && aliasWords.length >= 2
-    && normalizedTitle.length >= 10;
+    && expected[0].sourceCount >= minSources
+    && aliasWords.length >= minWords
+    && normalizedTitle.length >= minLength;
 }
 
 export async function filterAnimeItems<T extends { title?: string } & Record<string, unknown>>(items: T[], kind: CatalogKind): Promise<T[]> {
