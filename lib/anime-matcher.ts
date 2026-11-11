@@ -16,6 +16,18 @@ function normalizeAnimeTitle(value: string): string {
     .trim();
 }
 
+const knownAnimeTitles = new Set([
+  "One Piece", "Demon Slayer", "Kimetsu no Yaiba", "Jujutsu Kaisen",
+  "My Hero Academia", "Boku no Hero Academia", "Naruto", "Naruto Shippuden",
+  "Dragon Ball", "Dragon Ball Z", "Dragon Ball Super", "Attack on Titan",
+  "Shingeki no Kyojin", "Death Note", "Hunter x Hunter", "Bleach",
+  "Black Clover", "Chainsaw Man", "Spy x Family", "Solo Leveling",
+  "Fullmetal Alchemist Brotherhood", "Tokyo Revengers", "Haikyuu",
+  "Blue Lock", "One Punch Man", "Sword Art Online", "Fairy Tail",
+  "The Seven Deadly Sins", "Nanatsu no Taizai", "Mob Psycho 100",
+  "Dr Stone", "Vinland Saga", "JoJo's Bizarre Adventure"
+].map(normalizeAnimeTitle));
+
 let titleIndex: Promise<Set<string>> | null = null;
 
 async function getAnimeTitleIndex(): Promise<Set<string>> {
@@ -65,7 +77,7 @@ export async function filterAnimeItems<T extends { title?: string } & Record<str
     index = await getAnimeTitleIndex();
   } catch (error) {
     console.error("KageFlix anime index unavailable; using provider metadata:", error);
-    return items.filter(metadataSuggestsAnime);
+    return items.filter(item => knownAnimeTitles.has(normalizeAnimeTitle(typeof item.title === "string" ? item.title : "")) || metadataSuggestsAnime(item));
   }
 
   return items.filter(item => {
