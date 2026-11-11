@@ -77,19 +77,17 @@ function isHighConfidenceMatch(matches: TitleMatch[] | undefined, kind: CatalogK
   const expected = matches.filter(match => isExpectedFormat(match.type, kind));
   if (!expected.length) return false;
 
-  // Canonical database titles are strong identifiers. Synonyms can be generic
-  // translations shared with live-action productions, so accept them only
-  // when the alias is distinctive, unique and backed by multiple providers.
-  if (expected.some(match => match.canonical)) return true;
-  const distinctRecords = new Set(expected.map(match => match.recordTitle));
-  const [single] = expected;
-  const tokenCount = normalizeAnimeTitle([...matches.map(match => match.recordTitle)][0] ?? "").split(" ").filter(Boolean).length;
-  const alias = matches[0] ? normalizeAnimeTitle(matches[0].recordTitle) : "";
-  void tokenCount;
-  void alias;
-  return distinctRecords.size === 1
+  // Canonical titles are stronger identifiers than translated synonyms.
+  const canonical = matches.filter(match => match.canonical && isExpectedFormat(match.type, kind));
+  if (canonical.length === 1 && matches.every(match => match.recordTitle === canonical[0].recordTitle)) return true;
+
+  // Generic translations such as "Sunny", "Sugar" or "Scandal" can collide
+  // with live-action catalog titles. Synonyms must be unique and cross-sourced.
+  const records = new Set(matches.map(match => match.recordTitle));
+  return records.size === 1
     && expected.length === matches.length
-    && single.sourceCount >= 2;
+    && expected[0].sourceCount >= 2
+    && normalizeAnimeTitle(matches[0].recordTitle).split(" ").filter(Boolean).length >= 2;
 }
 
 export async function filterAnimeItems<T extends { title?: string } & Record<string, unknown>>(items: T[], kind: CatalogKind): Promise<T[]> {
