@@ -28,12 +28,14 @@ export default function ExploreCategoryPage() {
   const mpegRef = useRef<any>(null);
 
   useEffect(() => {
+    if (categoryId === "all-anime") setCategoryName("Todos os animes");
+    else if (categoryId === "all-movies") setCategoryName("Todos os filmes");
     let alive = true;
     fetch(`/api/xtream?type=${kind}&action=items&categoryId=${encodeURIComponent(categoryId)}`, { cache: "no-store" })
       .then(async response => { const data = await response.json(); if (!response.ok) throw new Error(data.error || "Não foi possível carregar os títulos."); if (alive) setItems(data.items || []); })
       .catch(err => { if (alive) setError(err instanceof Error ? err.message : "Falha ao carregar catálogo."); })
       .finally(() => { if (alive) setLoading(false); });
-    fetch(`/api/xtream?type=${kind}&action=categories`, { cache: "no-store" }).then(r => r.json()).then(data => { const match = (data.categories || []).find((entry: any) => String(entry.id) === categoryId); if (alive && match) setCategoryName(match.name); }).catch(() => {});
+    if (categoryId !== "all-anime" && categoryId !== "all-movies") fetch(`/api/xtream?type=${kind}&action=categories`, { cache: "no-store" }).then(r => r.json()).then(data => { const match = (data.categories || []).find((entry: any) => String(entry.id) === categoryId); if (alive && match) setCategoryName(match.name); }).catch(() => {});
     return () => { alive = false; };
   }, [kind, categoryId]);
 
@@ -69,6 +71,8 @@ export default function ExploreCategoryPage() {
   }, [playing]);
 
   const animeItems = useMemo(() => {
+    if (categoryId === "all-anime") return items;
+    if (categoryId === "all-movies") return items;
     const category = categoryName.normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLocaleLowerCase("pt-BR");
     const animeCategory = /anime|animes|crunchyroll|funimation/.test(category);
     return items.filter(item => {
@@ -77,7 +81,7 @@ export default function ExploreCategoryPage() {
       const country = (item.country || "").normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLocaleLowerCase("pt-BR");
       return /\\banime\\b/.test(genre) || (/(animation|animacao)/.test(genre) && /(japan|japao|japanese|japones)/.test(country));
     });
-  }, [items, categoryName]);
+  }, [items, categoryName, categoryId]);
   const filtered = useMemo(() => animeItems.filter(item => item.title.toLocaleLowerCase("pt-BR").includes(search.toLocaleLowerCase("pt-BR"))), [animeItems, search]);
 
   async function openItem(item: Item) {
@@ -96,12 +100,12 @@ export default function ExploreCategoryPage() {
   }
 
   return <main className="kf-app min-h-screen">
-    <header className="kf-header"><div className="mx-auto flex h-[72px] max-w-[1500px] items-center justify-between px-5 sm:px-8 lg:px-12"><a href="/iptv" className="kf-brand"><span className="kf-brand-mark"><Tv2 size={20}/></span><span>KAGE<span className="text-[#ed1722]">FLIX</span></span></a><a href="/iptv" className="inline-flex items-center gap-2 text-xs font-bold text-zinc-400 hover:text-white"><ArrowLeft size={15}/> Categorias</a></div></header>
-    <section className="border-b border-white/[.07] bg-[#111] px-5 py-9 sm:px-8 lg:px-12"><div className="mx-auto max-w-[1500px]"><p className="kf-kicker mb-3">{kind === "live" ? "TV AO VIVO" : kind === "series" ? "SÉRIES" : "FILMES"}</p><h1 className="text-3xl font-black tracking-tight sm:text-4xl">{categoryName}</h1><p className="mt-2 text-sm text-zinc-400">{animeItems.length.toLocaleString("pt-BR")} animes nesta categoria</p><label className="relative mt-6 block max-w-[420px]"><Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500"/><input className="kf-control w-full pl-9 text-sm" placeholder="Buscar título..." value={search} onChange={e=>setSearch(e.target.value)}/></label></div></section>
+    <header className="kf-header"><div className="mx-auto flex h-[72px] max-w-[1500px] items-center justify-between px-5 sm:px-8 lg:px-12"><a href="/catalogo" className="kf-brand"><span className="kf-brand-mark"><Tv2 size={20}/></span><span>KAGE<span className="text-[#ed1722]">FLIX</span></span></a><a href="/iptv" className="inline-flex items-center gap-2 text-xs font-bold text-zinc-400 hover:text-white"><ArrowLeft size={15}/> Categorias</a></div></header>
+    <section className="border-b border-white/[.07] bg-[#111] px-5 py-9 sm:px-8 lg:px-12"><div className="mx-auto max-w-[1500px]"><p className="kf-kicker mb-3">{kind === "live" ? "TV AO VIVO" : kind === "series" ? "SÉRIES" : "FILMES"}</p><h1 className="text-3xl font-black tracking-tight sm:text-4xl">{categoryName}</h1><p className="mt-2 text-sm text-zinc-400">{animeItems.length.toLocaleString("pt-BR")} {kind === "series" ? "animes" : "filmes"} nesta biblioteca</p><label className="relative mt-6 block max-w-[420px]"><Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500"/><input className="kf-control w-full pl-9 text-sm" placeholder="Buscar título..." value={search} onChange={e=>setSearch(e.target.value)}/></label></div></section>
     <section className="mx-auto max-w-[1500px] px-5 py-9 sm:px-8 lg:px-12">
-      {loading ? <div className="kf-panel flex min-h-52 items-center justify-center gap-3 text-sm text-zinc-400"><LoaderCircle className="animate-spin text-red-500"/> Carregando animes da categoria...</div> :
+      {loading ? <div className="kf-panel flex min-h-52 items-center justify-center gap-3 text-sm text-zinc-400"><LoaderCircle className="animate-spin text-red-500"/> Carregando títulos da biblioteca...</div> :
       error && !items.length ? <div role="alert" className="kf-panel border-red-500/20 p-6 text-sm text-red-200">{error}</div> :
-      !filtered.length ? <div className="kf-empty py-16 text-center"><Tv2 className="mx-auto mb-3 text-zinc-600" size={28}/><p className="font-bold">Nenhum anime encontrado</p></div> :
+      !filtered.length ? <div className="kf-empty py-16 text-center"><Tv2 className="mx-auto mb-3 text-zinc-600" size={28}/><p className="font-bold">Nenhum título encontrado</p></div> :
       <div className="grid grid-cols-2 gap-x-3 gap-y-7 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-6 2xl:grid-cols-7">{filtered.map(item => <button key={item.id} onClick={() => void openItem(item)} className="kf-poster group text-left"><div className="kf-poster-art relative">{item.poster ? <img src={item.poster} alt="" loading="lazy"/> : <div className="flex h-full flex-col items-center justify-center px-3 text-center"><Tv2 className="mb-3 text-red-500/60" size={30}/><span className="line-clamp-4 text-xs font-bold text-zinc-400">{item.title}</span></div>}<span className="absolute inset-0 grid place-items-center bg-black/0 text-white opacity-0 transition group-hover:bg-black/45 group-hover:opacity-100"><Play size={34} fill="currentColor"/></span></div><div className="min-h-[66px] p-3"><p className="line-clamp-2 text-xs font-bold leading-5 text-zinc-200">{item.title}</p>{item.year && <p className="mt-1 text-[10px] text-zinc-500">{item.year}</p>}</div></button>)}</div>}
     </section>
     {(playing || selected) && <div className="fixed inset-0 z-50 flex items-center justify-center overflow-y-auto bg-black/90 p-3 backdrop-blur-sm sm:p-6" role="dialog" aria-modal="true">
