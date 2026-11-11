@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getXtreamContext, safeKind, xtreamRequest } from "@/lib/xtream";
+import { filterAnimeItems } from "@/lib/anime-matcher";
 
 export const runtime = "nodejs";
 export const maxDuration = 30;
@@ -35,10 +36,7 @@ export async function GET(request: Request) {
       const normalize = (value: string) => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("pt-BR").replace(/[^a-z0-9]+/g, " ").trim();
       const wanted = normalize(query);
       const categoryData = await xtreamRequest<any[]>(username, password, actions.series.categories);
-      const categories = (Array.isArray(categoryData) ? categoryData : []).filter((entry: any) => {
-        const name = normalize(String(entry.category_name ?? entry.name ?? ""));
-        return name.includes("crunchyroll") || name.includes("funimation");
-      });
+      const categories = Array.isArray(categoryData) ? categoryData : [];
       const lists = await Promise.all(categories.map(async (category: any) => {
         const categoryId = String(category.category_id ?? category.id ?? "");
         if (!categoryId) return [];
@@ -75,7 +73,8 @@ export async function GET(request: Request) {
         extension: typeof item.container_extension === "string" ? item.container_extension : null,
         added: item.added ?? null
       })).filter(item => item.id);
-      return NextResponse.json({ type: kind, categoryId, items }, { headers: { "Cache-Control": "private, no-store" } });
+      const animeItems = await filterAnimeItems(items);
+      return NextResponse.json({ type: kind, categoryId, items: animeItems, totalItems: items.length, animeCount: animeItems.length }, { headers: { "Cache-Control": "private, no-store" } });
     }
 
     if (action === "series-info" && kind === "series") {
