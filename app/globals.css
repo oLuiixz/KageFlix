@@ -62,11 +62,33 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid 
 .kf-title { max-width:760px; font-size:clamp(38px,5.6vw,66px); font-weight:850; letter-spacing:-.045em; line-height:1.02; }
 .kf-muted { color:#a3a3a3; }
 .kf-section-title { font-size:clamp(21px,2.4vw,28px); font-weight:750; letter-spacing:-.025em; }
-.kf-poster { position:relative; overflow:hidden; border:1px solid rgba(255,255,255,.08); border-radius:5px; background:#171717; transition:transform .22s ease,border-color .22s ease; }
-.kf-poster:hover { transform:translateY(-4px); border-color:rgba(255,255,255,.3); box-shadow:none; }
-.kf-poster-art { display:flex; aspect-ratio:2/3; align-items:center; justify-content:center; overflow:hidden; background:#191919; }
-.kf-poster-art img { width:100%; height:100%; object-fit:cover; transition:transform .35s ease; }
-.kf-poster:hover .kf-poster-art img { transform:scale(1.035); }
+.kf-poster {
+  position:relative; isolation:isolate; overflow:hidden;
+  border:1px solid rgba(255,255,255,.22); border-radius:17px;
+  background:linear-gradient(145deg,rgba(255,255,255,.12),rgba(255,255,255,.035));
+  box-shadow:12px 17px 42px rgba(0,0,0,.34),inset 0 1px 0 rgba(255,255,255,.16);
+  backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);
+  transform:translateZ(0);
+  transition:transform .32s cubic-bezier(.2,.8,.2,1),border-color .32s ease,box-shadow .32s ease,background .32s ease;
+  cursor:pointer; user-select:none; text-align:left;
+}
+.kf-poster:before {
+  content:""; position:absolute; z-index:2; inset:0; pointer-events:none; border-radius:inherit;
+  background:linear-gradient(135deg,rgba(255,255,255,.13),transparent 32%,transparent 72%,rgba(229,9,20,.08));
+  opacity:.72; transition:opacity .3s ease;
+}
+.kf-poster:hover {
+  transform:scale(1.045); border-color:rgba(255,255,255,.58);
+  background:linear-gradient(145deg,rgba(255,255,255,.17),rgba(255,255,255,.055));
+  box-shadow:0 22px 55px rgba(0,0,0,.48),0 0 28px rgba(229,9,20,.13),inset 0 1px 0 rgba(255,255,255,.24);
+}
+.kf-poster:hover:before { opacity:1; }
+.kf-poster:active { transform:scale(.97) rotate(.6deg); }
+.kf-poster-art { display:flex; aspect-ratio:2/3; align-items:center; justify-content:center; overflow:hidden; background:linear-gradient(145deg,#242126,#101012); }
+.kf-poster-art img { width:100%; height:100%; object-fit:cover; transition:transform .55s cubic-bezier(.2,.8,.2,1),filter .35s ease; }
+.kf-poster:hover .kf-poster-art img { transform:scale(1.075); filter:saturate(1.08); }
+.kf-poster .min-h-\\[66px\\] { position:relative; z-index:3; border-top:1px solid rgba(255,255,255,.13); background:linear-gradient(135deg,rgba(255,255,255,.085),rgba(255,255,255,.025)); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); }
+.kf-poster:focus-visible { outline:2px solid #ff4b55; outline-offset:4px; }
 .kf-panel { border:1px solid rgba(255,255,255,.09); border-radius:8px; background:#141414; box-shadow:none; }
 .kf-control { min-height:42px; border:1px solid #363636; border-radius:5px; background:#171717; padding:0 13px; color:#eee; transition:border-color .18s,background .18s; }
 .kf-control:focus { border-color:#aaa; outline:none; }
@@ -78,7 +100,7 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid 
 .kf-scroll-row { display:grid; grid-auto-columns:minmax(145px,1fr); grid-auto-flow:column; gap:13px; overflow-x:auto; padding:3px 2px 18px; scroll-snap-type:x mandatory; scrollbar-width:thin; scrollbar-color:#454545 transparent; }
 .kf-scroll-row > * { scroll-snap-align:start; }
 @media (max-width:640px) { .kf-hero { min-height:420px; } .kf-hero:after { right:-220px; top:8%; } .kf-scroll-row { grid-auto-columns:minmax(125px,42vw); gap:10px; } }
-@media (prefers-reduced-motion:reduce) {
+@media (hover:none) { .kf-poster:hover { transform:none; } .kf-poster:active { transform:scale(.975); } }\n@media (prefers-reduced-motion:reduce) {
   *,*::before,*::after { scroll-behavior:auto!important; transition-duration:.01ms!important; animation-duration:.01ms!important; animation-iteration-count:1!important; }
 }
 
@@ -100,7 +122,7 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid 
   #catalogos > div:first-child { margin-bottom:22px; }
   .kf-section-title { font-size:24px; }
   .kf-scroll-row { grid-auto-columns:minmax(138px,43vw); gap:11px; margin-right:-18px; padding-right:18px; }
-  .kf-poster { border-radius:7px; }
+  .kf-poster { border-radius:15px; }
   .kf-poster-art { aspect-ratio:2/2.8; }
   #filmes { padding:0 18px 30px !important; }
   #filmes .kf-panel { padding:20px !important; }
