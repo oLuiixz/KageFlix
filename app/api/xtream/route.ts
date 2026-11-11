@@ -60,16 +60,12 @@ export async function GET(request: Request) {
           try {
             const list = await xtreamRequest<any[]>(username, password, actions[kind].items, { category_id: category.id });
             const entries = Array.isArray(list) ? list : [];
-            if (kind === "vod") {
-              total += entries.length;
-            } else {
-              const candidates = entries.map((entry: any) => ({
-                title: String(entry.name ?? entry.title ?? ""),
-                genre: typeof entry.genre === "string" ? entry.genre : "",
-                country: typeof entry.country === "string" ? entry.country : typeof entry.country_name === "string" ? entry.country_name : ""
-              }));
-              total += (await filterAnimeItems(candidates)).length;
-            }
+            const candidates = entries.map((entry: any) => ({
+              title: String(entry.name ?? entry.title ?? ""),
+              genre: typeof entry.genre === "string" ? entry.genre : "",
+              country: typeof entry.country === "string" ? entry.country : typeof entry.country_name === "string" ? entry.country_name : ""
+            }));
+            total += (await filterAnimeItems(candidates)).length;
           } catch (error) {
             console.warn("KageFlix unified catalog scan skipped:", category.name, error);
           }
@@ -162,7 +158,11 @@ export async function GET(request: Request) {
         added: item.added ?? null
       })).filter(item => item.id);
 
-      const classified = kind === "series" ? await filterAnimeItems(items) : items;
+      // Filmes e séries usam a mesma base de identificação: somente animes
+      // entram nas bibliotecas unificadas, independentemente da categoria de origem.
+      const classified = (kind === "series" || kind === "vod")
+        ? await filterAnimeItems(items)
+        : items;
       const seen = new Set<string>();
       const uniqueItems = classified.filter(item => {
         const normalized = item.title.normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLocaleLowerCase("pt-BR").replace(/[^a-z0-9]+/g, " ").trim();
