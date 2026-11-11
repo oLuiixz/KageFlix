@@ -1,17 +1,15 @@
 "use client";
 
 import { useEffect } from "react";
-import { useSearchParams } from "next/navigation";
-import { LoaderCircle, Tv2 } from "lucide-react";
+import { LoaderCircle } from "lucide-react";
 
 export default function CatalogPage() {
-  const searchParams = useSearchParams();
-  const type = searchParams.get("type") === "series" ? "series" : "vod";
-  const categoryId = type === "series" ? "all-anime" : "all-movies";
-
   useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const type = params.get("type") === "series" ? "series" : "vod";
+    const categoryId = type === "series" ? "all-anime" : "all-movies";
     window.location.replace(`/explorar/${type}/${categoryId}`);
-  }, [type, categoryId]);
+  }, []);
 
   return (
     <main className="kf-app flex min-h-screen items-center justify-center">
