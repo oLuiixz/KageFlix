@@ -7,12 +7,12 @@ const DATA_URL = "https://github.com/cedya77/anime-offline-database/releases/dow
 export function normalizeAnimeTitle(value: string): string {
   return value
     .normalize("NFD")
-    .replace(/[\\u0300-\\u036f]/g, "")
+    .replace(/[\u0300-\u036f]/g, "")
     .toLocaleLowerCase("en")
-    .replace(/\\[[^\\]]*(?:1080p|720p|480p|dub|legendado|dual audio|x265|hevc)[^\\]]*\\]/gi, " ")
-    .replace(/\\([^)]*(?:1080p|720p|480p|dub|legendado|dual audio|x265|hevc)[^)]*\\)/gi, " ")
-    .replace(/\\b(?:season|temporada|s)\\s*\\d+\\b.*$/i, " ")
-    .replace(/\\b\\d{3,4}p\\b/gi, " ")
+    .replace(/\[[^\]]*(?:1080p|720p|480p|dub|legendado|dual audio|x265|hevc)[^\]]*\]/gi, " ")
+    .replace(/\([^)]*(?:1080p|720p|480p|dub|legendado|dual audio|x265|hevc)[^)]*\)/gi, " ")
+    .replace(/\b(?:season|temporada|s)\s*\d+\b.*$/i, " ")
+    .replace(/\b\d{3,4}p\b/gi, " ")
     .replace(/[^a-z0-9]+/g, " ")
     .trim();
 }
