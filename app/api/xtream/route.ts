@@ -29,6 +29,35 @@ export async function GET(request: Request) {
       return NextResponse.json({ type: kind, categories }, { headers: { "Cache-Control": "private, no-store" } });
     }
 
+    if (action === "search" && kind === "series") {
+      const query = (params.get("query") || "").trim();
+      if (query.length < 2 || query.length > 100) return NextResponse.json({ error: "Busca inválida." }, { status: 400 });
+      const normalize = (value: string) => value.normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLocaleLowerCase("pt-BR").replace(/[^a-z0-9]+/g, " ").trim();
+      const wanted = normalize(query);
+      const categoryData = await xtreamRequest<any[]>(username, password, actions.series.categories);
+      const categories = (Array.isArray(categoryData) ? categoryData : []).filter((entry: any) => {
+        const name = normalize(String(entry.category_name ?? entry.name ?? ""));
+        return name.includes("crunchyroll") || name.includes("funimation");
+      });
+      const lists = await Promise.all(categories.map(async (category: any) => {
+        const categoryId = String(category.category_id ?? category.id ?? "");
+        if (!categoryId) return [];
+        const data = await xtreamRequest<any[]>(username, password, actions.series.items, { category_id: categoryId });
+        return (Array.isArray(data) ? data : []).map((entry: any) => ({
+          id: String(entry.series_id ?? entry.stream_id ?? entry.id ?? ""),
+          title: String(entry.name ?? entry.title ?? ""),
+          poster: typeof (entry.cover ?? entry.stream_icon) === "string" ? (entry.cover ?? entry.stream_icon) : null,
+          plot: typeof entry.plot === "string" ? entry.plot : "",
+          categoryId,
+          categoryName: String(category.category_name ?? category.name ?? "")
+        })).filter((entry: any) => /^\\d+$/.test(entry.id));
+      }));
+      const matches = lists.flat().filter((entry: any) => normalize(entry.title).includes(wanted));
+      matches.sort((left: any, right: any) => Number(normalize(right.title) === wanted) - Number(normalize(left.title) === wanted));
+      if (!matches.length) return NextResponse.json({ error: "Este título não foi encontrado nas séries disponíveis." }, { status: 404 });
+      return NextResponse.json({ item: matches[0] }, { headers: { "Cache-Control": "private, no-store" } });
+    }
+
     if (action === "items") {
       const categoryId = params.get("categoryId");
       if (!categoryId || !/^[-a-zA-Z0-9_]+$/.test(categoryId)) return NextResponse.json({ error: "Categoria inválida." }, { status: 400 });
