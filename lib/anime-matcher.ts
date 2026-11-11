@@ -90,6 +90,7 @@ export async function filterAnimeItems<T extends { title?: string } & Record<str
 }
 
 type ApiAnimeMatch = { aliases: string[]; kind: CatalogKind };
+const apiAliasCache = new Map<string, { expiresAt: number; aliases: string[] }>();
 
 function matchesRequestedTitle(candidateTitles: string[], wanted: string): boolean {
   return candidateTitles.some(title => normalizeAnimeTitle(title) === wanted);
@@ -102,19 +103,21 @@ function matchesRequestedTitle(candidateTitles: string[], wanted: string): boole
 export async function getAnimeSearchAliases(query: string, expectedKind: CatalogKind): Promise<string[]> {
   const wanted = normalizeAnimeTitle(query);
   if (wanted.length < 2) return [query];
+  const cacheKey = expectedKind + ":" + wanted;
+  const cached = apiAliasCache.get(cacheKey);
+  if (cached && cached.expiresAt > Date.now()) return cached.aliases;
 
   const anilist = async (): Promise<ApiAnimeMatch | null> => {
     const response = await fetch("https://graphql.anilist.co", {
       method: "POST",
       headers: { "Content-Type": "application/json", Accept: "application/json" },
       body: JSON.stringify({
-        query: `query ($search: String) { Media(search: $search, type: ANIME) { format title { romaji english native } synonyms } }`,
+        query: \`query ($search: String) { Media(search: $search, type: ANIME) { format title { romaji english native } synonyms } }\`,
         variables: { search: query }
       }),
-      next: { revalidate: 604800 },
       signal: AbortSignal.timeout(8000)
     });
-    if (!response.ok) throw new Error(`AniList HTTP ${response.status}`);
+    if (!response.ok) throw new Error(\`AniList HTTP \${response.status}\`);
     const payload = await response.json();
     const media = payload?.data?.Media;
     if (!media) return null;
@@ -128,9 +131,9 @@ export async function getAnimeSearchAliases(query: string, expectedKind: Catalog
   };
 
   const jikan = async (): Promise<ApiAnimeMatch | null> => {
-    const url = `https://api.jikan.moe/v4/anime?q=${encodeURIComponent(query)}&limit=10`;
+    const url = \`https://api.jikan.moe/v4/anime?q=\${encodeURIComponent(query)}&limit=10\`;
     const response = await fetch(url, { next: { revalidate: 604800 }, signal: AbortSignal.timeout(8000) });
-    if (!response.ok) throw new Error(`Jikan HTTP ${response.status}`);
+    if (!response.ok) throw new Error(\`Jikan HTTP \${response.status}\`);
     const payload = await response.json();
     for (const anime of Array.isArray(payload?.data) ? payload.data : []) {
       const aliases = [
@@ -150,12 +153,49 @@ export async function getAnimeSearchAliases(query: string, expectedKind: Catalog
     return null;
   };
 
-  const results = await Promise.allSettled([anilist(), jikan()]);
-  const aliases = new Set<string>([query]);
-  for (const result of results) {
-    if (result.status === "fulfilled" && result.value?.kind === expectedKind) {
-      for (const alias of result.value.aliases) aliases.add(alias);
+  const kitsu = async (): Promise<ApiAnimeMatch | null> => {
+    const url = \`https://kitsu.io/api/edge/anime?filter%5Btext%5D=\${encodeURIComponent(query)}&page%5Blimit%5D=10\`;
+    const response = await fetch(url, {
+      headers: { Accept: "application/vnd.api+json" },
+      next: { revalidate: 604800 },
+      signal: AbortSignal.timeout(8000)
+    });
+    if (!response.ok) throw new Error(\`Kitsu HTTP \${response.status}\`);
+    const payload = await response.json();
+    for (const anime of Array.isArray(payload?.data) ? payload.data : []) {
+      const attributes = anime?.attributes ?? {};
+      const titles = attributes.titles && typeof attributes.titles === "object" ? Object.values(attributes.titles) : [];
+      const aliases = [
+        attributes.canonicalTitle,
+        ...titles,
+        ...(Array.isArray(attributes.abbreviatedTitles) ? attributes.abbreviatedTitles : [])
+      ].filter((v): v is string => typeof v === "string" && v.length > 0);
+      if (!matchesRequestedTitle(aliases, wanted)) continue;
+      const subtype = String(attributes.subtype ?? "").toLowerCase();
+      const isMovie = subtype === "movie";
+      const isSeries = ["tv", "ova", "ona", "special", "music"].includes(subtype);
+      if ((expectedKind === "vod" && !isMovie) || (expectedKind === "series" && !isSeries)) continue;
+      return { aliases, kind: expectedKind };
+    }
+    return null;
+  };
+
+  let resolved: string[] = [query];
+  for (const source of [anilist, jikan, kitsu]) {
+    try {
+      const match = await source();
+      if (match?.kind === expectedKind) {
+        resolved = [...new Set([query, ...match.aliases])];
+        break;
+      }
+    } catch (error) {
+      console.warn("KageFlix anime metadata lookup failed; trying next source:", error);
     }
   }
-  return [...aliases];
+
+  apiAliasCache.set(cacheKey, {
+    aliases: resolved,
+    expiresAt: Date.now() + (resolved.length > 1 ? 7 : 1) * 86400000
+  });
+  return resolved;
 }
