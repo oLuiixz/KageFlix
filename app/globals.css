@@ -137,3 +137,15 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid 
   .kf-app [role="dialog"] { align-items:flex-end; padding:0; }
   .kf-app [role="dialog"] > div { max-height:92svh; border-radius:16px 16px 0 0; }
 }
+
+
+/* KageFlix anime-forward visual language */
+.kf-anime-hero { background:#08080b; }
+.kf-anime-hero:after { content:""; position:absolute; z-index:-5; inset:0; pointer-events:none; background:radial-gradient(ellipse at 76% 32%,rgba(255,48,70,.16),transparent 38%); }
+.kf-anime-tag { display:inline-flex; align-items:center; gap:7px; border:1px solid rgba(255,255,255,.22); border-radius:999px; background:rgba(15,10,16,.48); padding:7px 11px; color:rgba(255,255,255,.92); font-size:9px; font-weight:800; letter-spacing:.13em; backdrop-filter:blur(12px); }
+.kf-feature-card { box-shadow:0 18px 55px rgba(0,0,0,.28); transition:transform .3s ease,border-color .3s ease,box-shadow .3s ease; }
+.kf-feature-card:hover { transform:translateY(-5px); border-color:rgba(255,75,90,.5); box-shadow:0 24px 65px rgba(120,0,20,.22); }
+.kf-anime-poster { box-shadow:0 12px 34px rgba(0,0,0,.25); transition:transform .25s ease,border-color .25s ease; }
+.kf-anime-poster:hover { transform:translateY(-5px); border-color:rgba(255,255,255,.4); }
+.kf-discover-banner { box-shadow:0 18px 60px rgba(110,0,20,.18); }
+@media (max-width:767px) { .kf-anime-hero { min-height:620px; padding-bottom:46px; } .kf-anime-hero > img { object-position:62% center; } .kf-anime-hero h1 { font-size:clamp(42px,12vw,58px); } .kf-feature-card { min-height:280px; } }
