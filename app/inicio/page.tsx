@@ -1,6 +1,5 @@
 "use client";
-import { useEffect,useState } from "react";
-import { ArrowRight,Clapperboard,LogOut,Play,Settings,Sparkles,Tv2,Flame,Star,ChevronRight } from "lucide-react";
+import { ArrowRight,Clapperboard,LogOut,Play,Settings,Tv2,Flame,Star,ChevronRight } from "lucide-react";
 import MobileNav from "@/components/mobile-nav";
 
 const animeArt = [
@@ -10,8 +9,6 @@ const animeArt = [
  {title:"My Hero Academia",tag:"AÇÃO • HERÓIS",image:"https://es.web.img2.acsta.net/pictures/23/04/06/09/18/0802333.jpg",tone:"from-blue-950/80"}
 ];
 export default function HomePage(){
- const [counts,setCounts]=useState({vod:0,series:0});
- useEffect(()=>{let alive=true;Promise.all([fetch("/api/xtream?type=vod&action=categories",{cache:"no-store"}).then(async r=>{const d=await r.json();if(!r.ok)throw new Error();return Array.isArray(d.categories)?d.categories.length:0}),fetch("/api/xtream?type=series&action=categories",{cache:"no-store"}).then(async r=>{const d=await r.json();if(!r.ok)throw new Error();return Array.isArray(d.categories)?d.categories.length:0})]).then(([vod,series])=>{if(alive)setCounts({vod,series})}).catch(()=>{});return()=>{alive=false}},[]);
  return <main className="kf-app overflow-hidden">
  <header className="kf-header"><div className="mx-auto flex h-[72px] max-w-[1500px] items-center justify-between gap-5 px-5 sm:px-8 lg:px-12"><a href="/inicio" className="kf-brand"><span className="kf-brand-mark"><Tv2 size={20}/></span><span>KAGE<span className="text-[#ed1722]">FLIX</span></span></a><nav className="hidden items-center gap-8 md:flex"><a href="/inicio" className="kf-nav-link">Início</a><a href="/catalogo?type=vod" className="kf-nav-link">Filmes</a><a href="/catalogo?type=series" className="kf-nav-link">Séries</a></nav><div className="flex items-center gap-2"><a href="/configuracoes" aria-label="Configurações" className="grid h-10 w-10 place-items-center rounded-xl border border-white/10 text-zinc-300"><Settings size={17}/></a><form action="/api/auth/logout" method="post"><button aria-label="Sair" className="grid h-10 w-10 place-items-center rounded-xl border border-white/10 text-zinc-300"><LogOut size={16}/></button></form></div></div></header>
 
