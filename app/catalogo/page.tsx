@@ -14,7 +14,7 @@ export default function CatalogPage(){
  const [categories,setCategories]=useState<Category[]>([]);
  const [loading,setLoading]=useState(true);
  const [error,setError]=useState("");
- const load=useCallback(async(type:Kind)=>{setLoading(true);setError("");setCategories([]);try{const response=await fetch(`/api/xtream?type=${type}&action=categories`,{cache:"no-store"});const data=await response.json();if(!response.ok)throw new Error(data.error||"Não foi possível carregar o catálogo.");if(!Array.isArray(data.categories))throw new Error("Resposta inválida do catálogo.");setCategories(data.categories);}catch(e){setError(e instanceof Error?e.message:"Não foi possível carregar o catálogo.");}finally{setLoading(false);}},[]);
+ const load=useCallback(async(type:Kind)=>{setLoading(true);setError("");setCategories([]);try{const response=await fetch(`/api/xtream?type=${type}&action=anime-categories`,{cache:"no-store"});const data=await response.json();if(!response.ok)throw new Error(data.error||"Não foi possível carregar o catálogo.");if(!Array.isArray(data.categories))throw new Error("Resposta inválida do catálogo.");setCategories(data.categories);}catch(e){setError(e instanceof Error?e.message:"Não foi possível carregar o catálogo.");}finally{setLoading(false);}},[]);
  useEffect(()=>{const initial=new URLSearchParams(window.location.search).get("type")==="series"?"series":"vod";setKind(initial);void load(initial);},[load]);
  const choose=(next:Kind)=>{setKind(next);window.history.replaceState(null,"",`/catalogo?type=${next}`);void load(next);};
  const visible=categories;
