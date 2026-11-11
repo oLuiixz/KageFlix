@@ -131,6 +131,35 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid 
 .kf-poster:hover .kf-poster-art img { transform:scale(1.075); filter:saturate(1.08); }
 .kf-poster .min-h-\\[66px\\] { position:relative; z-index:3; border-top:1px solid rgba(255,255,255,.13); background:linear-gradient(135deg,rgba(255,255,255,.085),rgba(255,255,255,.025)); backdrop-filter:blur(14px); -webkit-backdrop-filter:blur(14px); }
 .kf-poster:focus-visible { outline:2px solid #ff4b55; outline-offset:4px; }
+
+/* Hard edge-to-edge poster fill: escape any button/card inner inset */
+.kf-poster { padding:0 !important; }
+.kf-poster > .kf-poster-art {
+  position:relative !important;
+  display:block !important;
+  width:calc(100% + 2px) !important;
+  max-width:none !important;
+  margin:-1px -1px 0 !important;
+  padding:0 !important;
+  flex:none !important;
+  aspect-ratio:2/3;
+  overflow:hidden;
+  border-radius:16px 16px 0 0;
+}
+.kf-poster > .kf-poster-art > img {
+  position:absolute !important;
+  inset:0 !important;
+  display:block !important;
+  width:100% !important;
+  height:100% !important;
+  min-width:0 !important;
+  max-width:none !important;
+  object-fit:cover !important;
+  object-position:center !important;
+  margin:0 !important;
+  padding:0 !important;
+}
+
 .kf-panel { border:1px solid rgba(255,255,255,.09); border-radius:8px; background:#141414; box-shadow:none; }
 .kf-control { min-height:42px; border:1px solid #363636; border-radius:5px; background:#171717; padding:0 13px; color:#eee; transition:border-color .18s,background .18s; }
 .kf-control:focus { border-color:#aaa; outline:none; }
