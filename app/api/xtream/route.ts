@@ -68,6 +68,8 @@ export async function GET(request: Request) {
         title: String(item.name ?? item.title ?? "Sem título"),
         poster: typeof (item.stream_icon ?? item.cover ?? item.movie_image) === "string" ? (item.stream_icon ?? item.cover ?? item.movie_image) : null,
         plot: typeof item.plot === "string" ? item.plot : "",
+        genre: typeof item.genre === "string" ? item.genre : "",
+        country: typeof item.country === "string" ? item.country : typeof item.country_name === "string" ? item.country_name : "",
         year: item.year ?? item.releaseDate ?? null,
         rating: item.rating ?? null,
         extension: typeof item.container_extension === "string" ? item.container_extension : null,
