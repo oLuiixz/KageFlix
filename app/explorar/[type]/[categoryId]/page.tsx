@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState } from "react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { ArrowLeft, Play, Search, Tv2, LoaderCircle, X, ChevronDown, Clapperboard, Radio } from "lucide-react";
 import MobileNav from "@/components/mobile-nav";
 
@@ -12,6 +12,7 @@ declare global { interface Window { mpegts?: any } }
 
 export default function ExploreCategoryPage() {
   const params = useParams<{ type: string; categoryId: string }>();
+  const router = useRouter();
   const kind = params.type as Kind;
   const categoryId = decodeURIComponent(params.categoryId);
   const [items, setItems] = useState<Item[]>([]);
@@ -100,7 +101,7 @@ export default function ExploreCategoryPage() {
   }
 
   return <main className="kf-app min-h-screen">
-    <header className="kf-header"><div className="mx-auto flex h-[72px] max-w-[1500px] items-center justify-between px-5 sm:px-8 lg:px-12"><a href={`/catalogo?type=${kind}`} className="kf-brand"><span className="kf-brand-mark"><Tv2 size={20}/></span><span>KAGE<span className="text-[#ed1722]">FLIX</span></span></a><a href="/iptv" className="inline-flex items-center gap-2 text-xs font-bold text-zinc-400 hover:text-white"><ArrowLeft size={15}/> Categorias</a></div></header>
+    <header className="kf-header"><div className="mx-auto flex h-[72px] max-w-[1500px] items-center justify-between px-5 sm:px-8 lg:px-12"><a href="/inicio" className="kf-brand"><span className="kf-brand-mark"><Tv2 size={20}/></span><span>KAGE<span className="text-[#ed1722]">FLIX</span></span></a><button type="button" onClick={() => { if (window.history.length > 1) router.back(); else router.push("/inicio"); }} className="inline-flex items-center gap-2 text-xs font-bold text-zinc-400 hover:text-white"><ArrowLeft size={15}/> Voltar</button></div></header>
     <section className="border-b border-white/[.07] bg-[#111] px-5 py-9 sm:px-8 lg:px-12"><div className="mx-auto max-w-[1500px]"><p className="kf-kicker mb-3">{kind === "live" ? "TV AO VIVO" : kind === "series" ? "SÉRIES" : "FILMES"}</p><h1 className="text-3xl font-black tracking-tight sm:text-4xl">{categoryName}</h1><p className="mt-2 text-sm text-zinc-400">{animeItems.length.toLocaleString("pt-BR")} {kind === "series" ? "animes" : "filmes"} nesta biblioteca</p><label className="relative mt-6 block max-w-[420px]"><Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-zinc-500"/><input className="kf-control w-full pl-9 text-sm" placeholder="Buscar título..." value={search} onChange={e=>setSearch(e.target.value)}/></label></div></section>
     <section className="mx-auto max-w-[1500px] px-5 py-9 sm:px-8 lg:px-12">
       {loading ? <div className="kf-panel flex min-h-52 items-center justify-center gap-3 text-sm text-zinc-400"><LoaderCircle className="animate-spin text-red-500"/> Carregando títulos da biblioteca...</div> :
