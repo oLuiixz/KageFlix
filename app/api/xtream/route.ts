@@ -94,7 +94,7 @@ export async function GET(request: Request) {
             plot: typeof entry.plot === "string" ? entry.plot : "",
             categoryId,
             categoryName: String(category.category_name ?? category.name ?? "")
-          })).filter((entry: any) => /^\\d+$/.test(entry.id));
+          })).filter((entry: any) => /^\d+$/.test(entry.id));
         }));
         lists.push(...batch);
         if (batch.flat().some((entry: any) => normalize(entry.title) === wanted)) break;
