@@ -1,4 +1,4 @@
-type AnimeRecord = { title?: string; synonyms?: string[]; type?: "TV" | "MOVIE" | "OVA" | "ONA" | "SPECIAL" | "UNKNOWN" };
+type AnimeRecord = { title?: string; synonyms?: string[]; sources?: string[]; type?: "TV" | "MOVIE" | "OVA" | "ONA" | "SPECIAL" | "UNKNOWN" };
 type AnimeDatabase = { data?: AnimeRecord[] };
 type CatalogKind = "vod" | "series";
 
@@ -25,9 +25,10 @@ const knownAnime: Array<{ type: AnimeRecord["type"]; titles: string[] }> = [
 const fallbackIndex = new Map<string, AnimeRecord["type"]>();
 for (const group of knownAnime) for (const title of group.titles) fallbackIndex.set(normalizeAnimeTitle(title), group.type);
 
-let titleIndex: Promise<Map<string, Set<NonNullable<AnimeRecord["type"]>>>> | null = null;
+type TitleMatch = { type: NonNullable<AnimeRecord["type"]>; canonical: boolean; sourceCount: number; recordTitle: string };
+let titleIndex: Promise<Map<string, TitleMatch[]>> | null = null;
 
-async function getAnimeTitleIndex(): Promise<Map<string, Set<NonNullable<AnimeRecord["type"]>>>> {
+async function getAnimeTitleIndex(): Promise<Map<string, TitleMatch[]>> {
   if (!titleIndex) {
     titleIndex = (async () => {
       const response = await fetch(DATA_URL, {
@@ -38,18 +39,22 @@ async function getAnimeTitleIndex(): Promise<Map<string, Set<NonNullable<AnimeRe
       if (!response.ok) throw new Error(`Anime metadata source returned HTTP ${response.status}.`);
       const database = await response.json() as AnimeDatabase;
       if (!Array.isArray(database.data)) throw new Error("Anime metadata source returned an invalid dataset.");
-      const index = new Map<string, Set<NonNullable<AnimeRecord["type"]>>>();
+      const index = new Map<string, TitleMatch[]>();
       for (const entry of database.data) {
         const type = entry.type;
         if (!type || type === "UNKNOWN") continue;
-        const titles = [entry.title, ...(Array.isArray(entry.synonyms) ? entry.synonyms : [])];
-        for (const raw of titles) {
-          if (typeof raw !== "string") continue;
-          const title = normalizeAnimeTitle(raw);
+        const sourceCount = Array.isArray(entry.sources) ? entry.sources.length : 0;
+        const titles: Array<{ value: unknown; canonical: boolean }> = [
+          { value: entry.title, canonical: true },
+          ...(Array.isArray(entry.synonyms) ? entry.synonyms.map(value => ({ value, canonical: false })) : [])
+        ];
+        for (const candidate of titles) {
+          if (typeof candidate.value !== "string") continue;
+          const title = normalizeAnimeTitle(candidate.value);
           if (!title) continue;
-          const types = index.get(title) ?? new Set<NonNullable<AnimeRecord["type"]>>();
-          types.add(type);
-          index.set(title, types);
+          const matches = index.get(title) ?? [];
+          matches.push({ type, canonical: candidate.canonical, sourceCount, recordTitle: String(entry.title ?? "") });
+          index.set(title, matches);
         }
       }
       return index;
@@ -61,15 +66,34 @@ async function getAnimeTitleIndex(): Promise<Map<string, Set<NonNullable<AnimeRe
   return titleIndex;
 }
 
-function isExpectedFormat(types: Set<string> | undefined, kind: CatalogKind): boolean {
-  if (!types) return false;
+function isExpectedFormat(type: string, kind: CatalogKind): boolean {
   return kind === "vod"
-    ? types.has("MOVIE")
-    : ["TV", "OVA", "ONA", "SPECIAL"].some(type => types.has(type));
+    ? type === "MOVIE"
+    : ["TV", "OVA", "ONA", "SPECIAL"].includes(type);
+}
+
+function isHighConfidenceMatch(matches: TitleMatch[] | undefined, kind: CatalogKind): boolean {
+  if (!matches?.length) return false;
+  const expected = matches.filter(match => isExpectedFormat(match.type, kind));
+  if (!expected.length) return false;
+
+  // Canonical database titles are strong identifiers. Synonyms can be generic
+  // translations shared with live-action productions, so accept them only
+  // when the alias is distinctive, unique and backed by multiple providers.
+  if (expected.some(match => match.canonical)) return true;
+  const distinctRecords = new Set(expected.map(match => match.recordTitle));
+  const [single] = expected;
+  const tokenCount = normalizeAnimeTitle([...matches.map(match => match.recordTitle)][0] ?? "").split(" ").filter(Boolean).length;
+  const alias = matches[0] ? normalizeAnimeTitle(matches[0].recordTitle) : "";
+  void tokenCount;
+  void alias;
+  return distinctRecords.size === 1
+    && expected.length === matches.length
+    && single.sourceCount >= 2;
 }
 
 export async function filterAnimeItems<T extends { title?: string } & Record<string, unknown>>(items: T[], kind: CatalogKind): Promise<T[]> {
-  let index: Map<string, Set<NonNullable<AnimeRecord["type"]>>>;
+  let index: Map<string, TitleMatch[]>;
   try {
     index = await getAnimeTitleIndex();
   } catch (error) {
@@ -83,7 +107,7 @@ export async function filterAnimeItems<T extends { title?: string } & Record<str
   return items.filter(item => {
     const title = typeof item.title === "string" ? normalizeAnimeTitle(item.title) : "";
     const types = index.get(title);
-    if (isExpectedFormat(types, kind)) return true;
+    if (isHighConfidenceMatch(types, kind)) return true;
     const fallbackType = fallbackIndex.get(title);
     return kind === "vod" ? fallbackType === "MOVIE" : ["TV", "OVA", "ONA", "SPECIAL"].includes(fallbackType ?? "");
   });
