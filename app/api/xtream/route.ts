@@ -49,29 +49,41 @@ export async function GET(request: Request) {
         name: String(item.category_name ?? item.name ?? "Sem categoria").replace(/[\\p{Extended_Pictographic}\\uFE0F]/gu, "").replace(/^\\s*[|·•-]+\\s*|\\s*[|·•-]+\\s*$/g, "").trim() || "Sem categoria",
         parentId: item.parent_id == null ? null : String(item.parent_id)
       })).filter(item => item.id);
-      const scanned: Array<{ category: (typeof categories)[number]; animeCount: number }> = [];
+
+      // O catálogo apresenta uma única biblioteca por tipo. As categorias
+      // originais continuam sendo usadas apenas internamente para coletar os títulos.
+      let total = 0;
       let cursor = 0;
       const worker = async () => {
         while (cursor < categories.length) {
-          const index = cursor++;
-          const category = categories[index];
+          const category = categories[cursor++];
           try {
             const list = await xtreamRequest<any[]>(username, password, actions[kind].items, { category_id: category.id });
-            const candidates = (Array.isArray(list) ? list : []).map((entry: any) => ({
-              title: String(entry.name ?? entry.title ?? ""),
-              genre: typeof entry.genre === "string" ? entry.genre : "",
-              country: typeof entry.country === "string" ? entry.country : typeof entry.country_name === "string" ? entry.country_name : ""
-            }));
-            const anime = await filterAnimeItems(candidates);
-            if (anime.length) scanned.push({ category, animeCount: anime.length });
+            const entries = Array.isArray(list) ? list : [];
+            if (kind === "vod") {
+              total += entries.length;
+            } else {
+              const candidates = entries.map((entry: any) => ({
+                title: String(entry.name ?? entry.title ?? ""),
+                genre: typeof entry.genre === "string" ? entry.genre : "",
+                country: typeof entry.country === "string" ? entry.country : typeof entry.country_name === "string" ? entry.country_name : ""
+              }));
+              total += (await filterAnimeItems(candidates)).length;
+            }
           } catch (error) {
-            console.warn("KageFlix category scan skipped:", category.name, error);
+            console.warn("KageFlix unified catalog scan skipped:", category.name, error);
           }
         }
       };
       await Promise.all(Array.from({ length: Math.min(8, categories.length) }, () => worker()));
-      const ordered = scanned.sort((left, right) => left.category.name.localeCompare(right.category.name, "pt-BR"));
-      return NextResponse.json({ type: kind, categories: ordered.map(entry => ({ ...entry.category, animeCount: entry.animeCount })) }, { headers: { "Cache-Control": "private, no-store" } });
+      const hasContent = total > 0;
+      const unified = hasContent ? [{
+        id: kind === "series" ? "all-anime" : "all-movies",
+        name: kind === "series" ? "Todos os animes" : "Todos os filmes",
+        parentId: null,
+        animeCount: total
+      }] : [];
+      return NextResponse.json({ type: kind, categories: unified }, { headers: { "Cache-Control": "private, no-store" } });
     }
 
     if (action === "search" && kind === "series") {
@@ -108,9 +120,36 @@ export async function GET(request: Request) {
     if (action === "items") {
       const categoryId = params.get("categoryId");
       if (!categoryId || !/^[-a-zA-Z0-9_]+$/.test(categoryId)) return NextResponse.json({ error: "Categoria inválida." }, { status: 400 });
-      const data = await xtreamRequest<unknown>(username, password, actions[kind].items, { category_id: categoryId });
-      if (!Array.isArray(data)) throw new Error("O servidor não retornou títulos válidos.");
-      const items = data.map((item: any) => ({
+
+      const unifiedId = kind === "series" ? "all-anime" : kind === "vod" ? "all-movies" : "";
+      let rawItems: any[] = [];
+      if (categoryId === unifiedId && unifiedId) {
+        const categoryData = await xtreamRequest<any[]>(username, password, actions[kind].categories);
+        const categories = Array.isArray(categoryData) ? categoryData : [];
+        let cursor = 0;
+        const batches: any[][] = [];
+        const worker = async () => {
+          while (cursor < categories.length) {
+            const category = categories[cursor++];
+            const id = String(category.category_id ?? category.id ?? "");
+            if (!id) continue;
+            try {
+              const list = await xtreamRequest<any[]>(username, password, actions[kind].items, { category_id: id });
+              if (Array.isArray(list)) batches.push(list);
+            } catch (error) {
+              console.warn("KageFlix unified catalog category skipped:", id, error);
+            }
+          }
+        };
+        await Promise.all(Array.from({ length: Math.min(8, categories.length) }, () => worker()));
+        rawItems = batches.flat();
+      } else {
+        const data = await xtreamRequest<unknown>(username, password, actions[kind].items, { category_id: categoryId });
+        if (!Array.isArray(data)) throw new Error("O servidor não retornou títulos válidos.");
+        rawItems = data as any[];
+      }
+
+      const items = rawItems.map((item: any) => ({
         id: String(item.stream_id ?? item.series_id ?? item.id ?? ""),
         title: String(item.name ?? item.title ?? "Sem título"),
         poster: typeof (item.stream_icon ?? item.cover ?? item.movie_image) === "string" ? (item.stream_icon ?? item.cover ?? item.movie_image) : null,
@@ -122,8 +161,17 @@ export async function GET(request: Request) {
         extension: typeof item.container_extension === "string" ? item.container_extension : null,
         added: item.added ?? null
       })).filter(item => item.id);
-      const animeItems = await filterAnimeItems(items);
-      return NextResponse.json({ type: kind, categoryId, items: animeItems, totalItems: items.length, animeCount: animeItems.length }, { headers: { "Cache-Control": "private, no-store" } });
+
+      const classified = kind === "series" ? await filterAnimeItems(items) : items;
+      const seen = new Set<string>();
+      const uniqueItems = classified.filter(item => {
+        const normalized = item.title.normalize("NFD").replace(/[\\u0300-\\u036f]/g, "").toLocaleLowerCase("pt-BR").replace(/[^a-z0-9]+/g, " ").trim();
+        const key = kind === "series" ? normalized : `${normalized}|${String(item.year ?? "")}`;
+        if (!key || seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      });
+      return NextResponse.json({ type: kind, categoryId, items: uniqueItems, totalItems: rawItems.length, animeCount: kind === "series" ? uniqueItems.length : undefined }, { headers: { "Cache-Control": "private, no-store" } });
     }
 
     if (action === "series-info" && kind === "series") {
