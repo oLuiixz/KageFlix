@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { getXtreamContext, safeKind, xtreamRequest } from "@/lib/xtream";
-import { filterAnimeItems } from "@/lib/anime-matcher";
+import { filterAnimeItems, getAnimeSearchAliases, normalizeAnimeTitle } from "@/lib/anime-matcher";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -65,7 +65,7 @@ export async function GET(request: Request) {
               genre: typeof entry.genre === "string" ? entry.genre : "",
               country: typeof entry.country === "string" ? entry.country : typeof entry.country_name === "string" ? entry.country_name : ""
             }));
-            total += (await filterAnimeItems(candidates)).length;
+            total += (await filterAnimeItems(candidates, kind)).length;
           } catch (error) {
             console.warn("KageFlix unified catalog scan skipped:", category.name, error);
           }
@@ -85,8 +85,11 @@ export async function GET(request: Request) {
     if (action === "search" && kind === "series") {
       const query = (params.get("query") || "").trim();
       if (query.length < 2 || query.length > 100) return NextResponse.json({ error: "Busca inválida." }, { status: 400 });
-      const normalize = (value: string) => value.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLocaleLowerCase("pt-BR").replace(/[^a-z0-9]+/g, " ").trim();
-      const wanted = normalize(query);
+      const wanted = normalizeAnimeTitle(query);
+      // AniList e Jikan resolvem títulos alternativos na busca individual,
+      // sem gerar milhares de chamadas durante a varredura do catálogo.
+      const aliases = await getAnimeSearchAliases(query, "series");
+      const wantedAliases = new Set(aliases.map(normalizeAnimeTitle));
       const categoryData = await xtreamRequest<any[]>(username, password, actions.series.categories);
       const categories = Array.isArray(categoryData) ? categoryData : [];
       const lists: any[][] = [];
@@ -105,10 +108,10 @@ export async function GET(request: Request) {
           })).filter((entry: any) => /^\d+$/.test(entry.id));
         }));
         lists.push(...batch);
-        if (batch.flat().some((entry: any) => normalize(entry.title) === wanted)) break;
+        if (batch.flat().some((entry: any) => wantedAliases.has(normalizeAnimeTitle(entry.title)))) break;
       }
-      const matches = lists.flat().filter((entry: any) => normalize(entry.title).includes(wanted));
-      matches.sort((left: any, right: any) => Number(normalize(right.title) === wanted) - Number(normalize(left.title) === wanted));
+      const matches = lists.flat().filter((entry: any) => wantedAliases.has(normalizeAnimeTitle(entry.title)) || [...wantedAliases].some(alias => alias.length > 3 && normalizeAnimeTitle(entry.title).includes(alias)));
+      matches.sort((left: any, right: any) => Number(normalizeAnimeTitle(right.title) === wanted) - Number(normalizeAnimeTitle(left.title) === wanted));
       if (!matches.length) return NextResponse.json({ error: "Este título não foi encontrado nas séries disponíveis." }, { status: 404 });
       return NextResponse.json({ item: matches[0] }, { headers: { "Cache-Control": "private, no-store" } });
     }
@@ -161,7 +164,7 @@ export async function GET(request: Request) {
       // Filmes e séries usam a mesma base de identificação: somente animes
       // entram nas bibliotecas unificadas, independentemente da categoria de origem.
       const classified = (kind === "series" || kind === "vod")
-        ? await filterAnimeItems(items)
+        ? await filterAnimeItems(items, kind)
         : items;
       const seen = new Set<string>();
       const uniqueItems = classified.filter(item => {
