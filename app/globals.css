@@ -364,3 +364,30 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid 
 @media (prefers-reduced-motion: reduce) {
   .kf-loader-slider::before { animation: none; transform: translateY(0); }
 }
+
+
+/* Keep the home header fully inside narrow standalone/PWA viewports */
+@media (max-width: 767px) {
+  .kf-home-header-inner {
+    box-sizing: border-box !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+    min-width: 0 !important;
+    padding-left: max(10px, env(safe-area-inset-left)) !important;
+    padding-right: max(10px, env(safe-area-inset-right)) !important;
+    gap: 4px !important;
+  }
+  .kf-home-header-inner .kf-brand {
+    min-width: 0 !important;
+    flex: 1 1 auto !important;
+    overflow: hidden;
+    white-space: nowrap;
+    gap: 5px !important;
+    font-size: 12px !important;
+    letter-spacing: .045em !important;
+  }
+  .kf-home-header-inner .kf-brand > span:last-child { overflow: hidden; text-overflow: clip; }
+  .kf-home-header-inner > div:last-child { flex: 0 0 auto; gap: 5px !important; }
+  .kf-home-header-inner > div:last-child a,
+  .kf-home-header-inner > div:last-child button { width: 32px !important; height: 32px !important; }
+}
