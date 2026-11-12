@@ -8,7 +8,7 @@ import { encryptPrivateValue, validatePlaylistUrl } from "@/lib/catalog";
 export const runtime = "nodejs";
 export const maxDuration = 60;
 const COOKIE = "kageflix_session";
-const SESSION_SECONDS = 60 * 60 * 24 * 7;
+const SESSION_SECONDS = 60 * 60 * 24 * 30;
 const DUMMY_HASH = "$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy";
 
 async function validateIptvAccount(username: string, password: string) {
@@ -193,7 +193,7 @@ export async function POST(request: NextRequest) {
       .setProtectedHeader({ alg: "HS256" })
       .setSubject(user.id)
       .setIssuedAt()
-      .setExpirationTime("7d")
+      .setExpirationTime("30d")
       .sign(new TextEncoder().encode(process.env.AUTH_SECRET));
 
     await sql`UPDATE users SET last_login_at = NOW(), updated_at = NOW() WHERE id = ${user.id}`;
