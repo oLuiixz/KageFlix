@@ -6,7 +6,7 @@ import MobileNav from "@/components/mobile-nav";
 
 type SettingsData = {
   account: { username: string; displayName: string; createdAt: string | null; lastLoginAt: string | null };
-  plan: { status: string; expiresAt: string | null; trial: boolean; maxConnections: string | null; activeConnections: string | null };
+  plan: { status: string; expiresAt: string | null; trial: boolean };
 };
 
 function dateLabel(value: string | null) {
@@ -68,13 +68,10 @@ export default function SettingsPage() {
                   <div className="rounded-xl border border-white/[.06] bg-white/[.025] p-4"><p className="text-[10px] font-bold tracking-wider text-zinc-500">SITUAÇÃO</p><p className="mt-2 text-sm font-bold">{data.plan.status}</p></div>
                   <div className="rounded-xl border border-white/[.06] bg-white/[.025] p-4"><p className="text-[10px] font-bold tracking-wider text-zinc-500">MODALIDADE</p><p className="mt-2 text-sm font-bold">{data.plan.trial ? "Teste" : "Assinatura"}</p></div>
                   <div className="col-span-2 rounded-xl border border-white/[.06] bg-white/[.025] p-4"><p className="text-[10px] font-bold tracking-wider text-zinc-500">VENCIMENTO</p><p className="mt-2 text-sm font-bold">{dateLabel(data.plan.expiresAt)}</p></div>
-                  <div className="rounded-xl border border-white/[.06] bg-white/[.025] p-4"><p className="text-[10px] font-bold tracking-wider text-zinc-500">CONEXÕES PERMITIDAS</p><p className="mt-2 text-lg font-black">{data.plan.maxConnections || "—"}</p></div>
-                  <div className="rounded-xl border border-white/[.06] bg-white/[.025] p-4"><p className="text-[10px] font-bold tracking-wider text-zinc-500">CONEXÕES ATIVAS</p><p className="mt-2 text-lg font-black">{data.plan.activeConnections || "—"}</p></div>
                 </div>
               </section>
             </div>
 
-            
           </>
         ) : <p role="alert" className="rounded-xl border border-red-500/20 bg-red-500/[.07] p-4 text-sm text-red-200">{error || "Não foi possível carregar as configurações."}</p>}
       </div>
