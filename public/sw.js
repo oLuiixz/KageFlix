@@ -1,10 +1,10 @@
-const CACHE_NAME = "kageflix-shell-v1";
+const CACHE_NAME = "kageflix-shell-v2";
 const OFFLINE_URL = "/offline";
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME)
-      .then((cache) => cache.addAll(["/", OFFLINE_URL, "/manifest.webmanifest", "/icon.svg"]))
+      .then((cache) => cache.addAll([OFFLINE_URL, "/manifest.webmanifest", "/icon.svg"]))
       .then(() => self.skipWaiting())
   );
 });
@@ -26,18 +26,7 @@ self.addEventListener("fetch", (event) => {
 
   if (request.mode === "navigate") {
     event.respondWith(
-      fetch(request)
-        .then((response) => {
-          if (response.ok) {
-            const copy = response.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
-          }
-          return response;
-        })
-        .catch(async () => {
-          const cachedPage = await caches.match(request);
-          return cachedPage || caches.match(OFFLINE_URL);
-        })
+      fetch(request).catch(() => caches.match(OFFLINE_URL))
     );
     return;
   }
@@ -45,14 +34,14 @@ self.addEventListener("fetch", (event) => {
   if (url.pathname.startsWith("/_next/static/") || ["/icon.svg", "/manifest.webmanifest"].includes(url.pathname)) {
     event.respondWith(
       caches.match(request).then((cached) => {
-        const network = fetch(request).then((response) => {
+        if (cached) return cached;
+        return fetch(request).then((response) => {
           if (response.ok) {
             const copy = response.clone();
             caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
           }
           return response;
         });
-        return cached || network;
       })
     );
   }
