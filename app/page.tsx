@@ -1,7 +1,7 @@
 "use client";
 
 import { FormEvent, useState } from "react";
-import { ArrowRight, Eye, EyeOff, LockKeyhole, ShieldCheck, Sparkles, Tv2, Play, Layers3 } from "lucide-react";
+import { ArrowRight, Eye, EyeOff, LockKeyhole, ShieldCheck, Sparkles, Play, Layers3, MessageCircle } from "lucide-react";
 
 export default function LoginPage() {
   const [username, setUsername] = useState("");
@@ -48,7 +48,7 @@ export default function LoginPage() {
             <div className="mover mx-auto mb-12" aria-hidden="true" />
             <p className="text-[10px] font-bold tracking-[.3em] text-red-400">KAGEFLIX</p>
             <h2 className="mt-4 text-2xl font-black tracking-tight text-white sm:text-3xl">Preparando seu universo</h2>
-            <p className="mx-auto mt-3 max-w-sm text-sm leading-6 text-zinc-400">Estamos conectando sua conta e preparando sua lista de animes. No primeiro acesso, o catálogo é baixado e organizado automaticamente.</p>
+            <p className="mx-auto mt-3 max-w-sm text-sm leading-6 text-zinc-400">Estamos validando seu acesso e preparando sua experiência KageFlix.</p>
             <p className="mt-7 text-xs font-medium text-zinc-500">Aguarde só mais um instante...</p>
           </div>
           <style jsx>{`
@@ -63,8 +63,7 @@ export default function LoginPage() {
 
       <header className="relative z-10 mx-auto flex w-full max-w-[1440px] items-center justify-between px-6 py-6 sm:px-10 lg:px-14">
         <a href="/" className="group flex items-center gap-3" aria-label="KageFlix início">
-          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-gradient-to-br from-[#ff4858] to-[#a50924] shadow-[0_8px_30px_#e509143d]"><Tv2 size={20} strokeWidth={2.4}/></span>
-          <span className="text-[19px] font-black tracking-[.16em]">KAGE<span className="text-[#f04455]">FLIX</span></span>
+          <img src="/kageflix-logo.svg" alt="KageFlix" className="h-10 w-auto object-contain"/>
         </a>
         <div className="hidden items-center gap-2 rounded-full border border-white/[.09] bg-white/[.035] px-4 py-2 text-[10px] font-semibold tracking-[.2em] text-zinc-400 sm:flex">
           <span className="h-1.5 w-1.5 rounded-full bg-emerald-400 shadow-[0_0_10px_#34d399]"/> PLATAFORMA PRIVADA
@@ -74,13 +73,8 @@ export default function LoginPage() {
       <section className="relative z-10 mx-auto grid min-h-[calc(100vh-150px)] w-full max-w-[1440px] items-center gap-12 px-5 pb-12 pt-4 sm:px-10 lg:grid-cols-[1.05fr_.85fr] lg:gap-20 lg:px-14">
         <div className="relative hidden min-h-[590px] items-center lg:flex">
           <div className="absolute inset-0 overflow-hidden rounded-[34px] border border-white/[.07] bg-[#111016]">
-            <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_75%_25%,#8c142b66,transparent_35%),radial-gradient(ellipse_at_20%_85%,#45203e55,transparent_38%),linear-gradient(135deg,#19141d_0%,#0b0b10_55%,#180b12_100%)]"/>
-            <div className="absolute -right-24 top-[-10%] h-[520px] w-[520px] rounded-full border border-white/[.06]"/>
-            <div className="absolute -right-5 top-[5%] h-[390px] w-[390px] rounded-full border border-white/[.07]"/>
-            <div className="absolute right-[12%] top-[18%] h-[270px] w-[270px] rounded-full border border-[#ef334c]/20 bg-[radial-gradient(circle_at_35%_30%,#ff687733,transparent_55%)] shadow-[0_0_100px_#e5091420]"/>
-            <div className="absolute bottom-0 left-0 right-0 h-[48%] bg-gradient-to-t from-[#09090d] via-[#09090dcc] to-transparent"/>
-            <div className="absolute right-[16%] top-[20%] h-[330px] w-[190px] rotate-[13deg] rounded-[48%_48%_18%_18%] border border-[#ff7880]/20 bg-gradient-to-b from-[#d72c4a]/20 via-[#341522]/55 to-[#08080c] shadow-[0_0_90px_#e5091425]"/>
-            <div className="absolute right-[22%] top-[17%] h-[105px] w-[105px] rounded-full border border-[#ff8791]/20 bg-[radial-gradient(circle_at_35%_30%,#ffb1b8,#8e1c36_65%,#160b12)] shadow-[0_0_70px_#e5091440]"/>
+            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(5,5,8,.12)_0%,rgba(5,5,8,.28)_38%,#09090d_100%)]"/><img src="https://img.anime2you.de/2021/07/demon-slayer-s2-visual.jpg" alt="" className="absolute inset-0 h-full w-full object-cover object-[58%_25%] opacity-75"/><img src="https://as01.epimg.net/meristation/imagenes/2022/08/22/noticias/1661161775_656366_1661164198_noticia_normal.jpg" alt="" className="absolute right-[-5%] top-[12%] h-[42%] w-[42%] rounded-2xl border border-white/15 object-cover opacity-75 shadow-2xl"/>
+            <div className="absolute inset-0 bg-gradient-to-t from-[#09090d] via-[#09090d]/15 to-black/10"/>
             <div className="absolute bottom-10 left-10 right-10">
               <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-[#f04455]/25 bg-[#e50914]/10 px-3 py-1.5 text-[9px] font-bold tracking-[.24em] text-[#ff8791]"><Sparkles size={12}/> SEU UNIVERSO, SEM LIMITES</div>
               <h1 className="max-w-[560px] text-[58px] font-black leading-[.98] tracking-[-.065em] xl:text-[70px]">Uma nova história <span className="text-transparent bg-clip-text bg-gradient-to-r from-[#ff6878] to-[#c51c3c]">começa aqui.</span></h1>
@@ -92,7 +86,7 @@ export default function LoginPage() {
 
         <div className="mx-auto w-full max-w-[480px] lg:mr-auto">
           <div className="mb-8 lg:hidden">
-            <div className="mb-5 flex h-12 w-12 items-center justify-center rounded-2xl bg-gradient-to-br from-[#ff4858] to-[#a50924] shadow-[0_8px_30px_#e509143d]"><Tv2 size={23}/></div>
+            <img src="/kageflix-logo.svg" alt="KageFlix" className="mb-5 h-12 w-auto object-contain object-left"/>
             <p className="mb-2 text-[10px] font-bold tracking-[.25em] text-[#ff6878]">BEM-VINDO À KAGEFLIX</p>
             <h1 className="text-4xl font-black leading-tight tracking-[-.05em]">Sua próxima história <span className="text-[#ef4054]">espera por você.</span></h1>
           </div>
@@ -103,7 +97,7 @@ export default function LoginPage() {
               <div className="mb-5 flex h-11 w-11 items-center justify-center rounded-xl border border-[#f04455]/20 bg-[#e50914]/10 text-[#ff6474]"><LockKeyhole size={19}/></div>
               <p className="text-[10px] font-bold tracking-[.25em] text-[#ff6878]">ÁREA DO ASSINANTE</p>
               <h2 className="mt-3 text-[30px] font-bold tracking-[-.04em] text-white">Entre na sua conta</h2>
-              <p className="mt-2 text-[13px] leading-6 text-zinc-500">Use o mesmo usuário e senha do seu acesso IPTV.</p>
+              <p className="mt-2 text-[13px] leading-6 text-zinc-500">Entre com o usuário e a senha fornecidos na contratação do seu acesso.</p>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-5">
@@ -124,9 +118,9 @@ export default function LoginPage() {
               </button>
             </form>
 
-            <div className="mt-8 flex items-start gap-3 border-t border-white/[.08] pt-6">
-              <ShieldCheck size={17} className="mt-0.5 shrink-0 text-emerald-400"/>
-              <p className="text-[11px] leading-5 text-zinc-500">Acesso protegido. Sua conta precisa estar ativa no servidor. Não existe cadastro público.</p>
+            <div className="mt-8 flex flex-col gap-3 border-t border-white/[.08] pt-6 sm:flex-row sm:items-center sm:justify-between">
+              <div className="flex items-start gap-3"><ShieldCheck size={17} className="mt-0.5 shrink-0 text-emerald-400"/><p className="text-[12px] leading-5 text-zinc-400">Ainda não é cliente? Fale com um de nossos consultores.</p></div>
+              <a href="https://wa.me/5524999653497?text=Quero%20adquirir%20um%20acesso%20do%20KageFlix" target="_blank" rel="noopener noreferrer" className="inline-flex h-10 shrink-0 items-center justify-center gap-2 rounded-lg border border-emerald-500/30 bg-emerald-500/10 px-4 text-xs font-bold text-emerald-300 transition hover:border-emerald-400/60 hover:bg-emerald-500/20"><MessageCircle size={15}/> Clique aqui</a>
             </div>
           </div>
           <div className="mt-5 flex items-center justify-center gap-2 text-[10px] tracking-[.12em] text-zinc-600"><Layers3 size={13}/> EXPERIÊNCIA KAGEFLIX <span className="text-zinc-800">•</span> ACESSO SEGURO</div>
