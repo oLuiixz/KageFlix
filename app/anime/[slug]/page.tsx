@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams } from "next/navigation";
-import { ArrowLeft, Play, Tv2, LoaderCircle, X, Star, CalendarDays, Clapperboard } from "lucide-react";
+import { ArrowLeft, Play, Tv2, X, Star, CalendarDays, Clapperboard } from "lucide-react";
+import ContentLoader from "@/components/content-loader";
 import MobileNav from "@/components/mobile-nav";
 
 type Featured = { slug: string; title: string; query: string; fallback: string; eyebrow: string };
@@ -110,7 +111,7 @@ export default function AnimeDetailPage() {
 
     <section id="episodios" className="mx-auto max-w-[1500px] scroll-mt-6 px-5 py-10 sm:px-8 sm:py-14 lg:px-12">
       <div className="mb-7"><p className="kf-kicker mb-2">CONTINUE A AVENTURA</p><h2 className="text-2xl font-black sm:text-3xl">Episódios disponíveis</h2><p className="mt-2 text-sm text-zinc-500">{episodes.length.toLocaleString("pt-BR")} episódios encontrados na sua coleção.</p></div>
-      {loading ? <div className="kf-panel flex min-h-48 items-center justify-center gap-3 text-sm text-zinc-400"><LoaderCircle className="animate-spin text-red-500" size={19}/> Buscando o conteúdo...</div> :
+      {loading ? <div className="kf-panel flex min-h-48 items-center justify-center"><ContentLoader label="Buscando o conteúdo..." compact /></div> :
        error ? <div role="alert" className="kf-panel border-red-500/20 p-6 text-sm text-red-200">{error}</div> :
        !episodes.length ? <div className="kf-empty py-16 text-center"><Tv2 className="mx-auto mb-3 text-zinc-600" size={30}/><p className="font-bold">Nenhum episódio disponível</p><p className="mt-2 text-sm text-zinc-500">Este título foi localizado, mas não há episódios retornados pela lista.</p></div> :
        <div className="space-y-8">{groupedEpisodes.map(([season, list]) => <div key={season}><h3 className="mb-4 text-lg font-extrabold">Temporada {season}</h3><div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">{list.map(episode => <button key={episode.id} onClick={() => setPlaying(episode)} className="group flex min-h-[92px] items-center gap-4 rounded-xl border border-white/[.08] bg-white/[.025] p-3 text-left transition hover:border-red-500/35 hover:bg-white/[.055]"><span className="grid h-12 w-12 shrink-0 place-items-center rounded-lg bg-red-600 text-white shadow-lg shadow-red-950/30 transition group-hover:scale-105"><Play size={17} fill="currentColor"/></span><span className="min-w-0 flex-1"><span className="block truncate text-sm font-bold text-zinc-100">{episode.title}</span><span className="mt-1 block text-[11px] text-zinc-500">Episódio {episode.episode ?? "—"}</span></span></button>)}</div></div>)}</div>}
