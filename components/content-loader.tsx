@@ -11,7 +11,7 @@ export default function ContentLoader({ label = "Carregando conteúdo...", compa
       <svg className="kf-content-loader" viewBox="0 0 50 50" aria-hidden="true">
         <rect x="0" y="0" width="50" height="50" />
       </svg>
-      <span className="sr-only">{label}</span>
+      <span className="kf-content-loader-label">{label}</span>
     </div>
   );
 }
