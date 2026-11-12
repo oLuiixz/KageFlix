@@ -73,7 +73,7 @@ export default function LoginPage() {
       <section className="relative z-10 mx-auto grid min-h-[calc(100vh-150px)] w-full max-w-[1440px] items-center gap-12 px-5 pb-12 pt-4 sm:px-10 lg:grid-cols-[1.05fr_.85fr] lg:gap-20 lg:px-14">
         <div className="relative hidden min-h-[590px] items-center lg:flex">
           <div className="absolute inset-0 overflow-hidden rounded-[34px] border border-white/[.07] bg-[#111016]">
-            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(5,5,8,.12)_0%,rgba(5,5,8,.28)_38%,#09090d_100%)]"/><img src="https://img.anime2you.de/2021/07/demon-slayer-s2-visual.jpg" alt="" className="absolute inset-0 h-full w-full object-cover object-[58%_25%] opacity-75"/><img src="https://as01.epimg.net/meristation/imagenes/2022/08/22/noticias/1661161775_656366_1661164198_noticia_normal.jpg" alt="" className="absolute right-[-5%] top-[12%] h-[42%] w-[42%] rounded-2xl border border-white/15 object-cover opacity-75 shadow-2xl"/>
+            <div className="absolute inset-0 bg-[linear-gradient(180deg,rgba(5,5,8,.12)_0%,rgba(5,5,8,.28)_38%,#09090d_100%)]"/><img src="https://img.anime2you.de/2021/07/demon-slayer-s2-visual.jpg" alt="" className="absolute inset-0 h-full w-full object-cover object-[58%_25%] opacity-75"/>
             <div className="absolute inset-0 bg-gradient-to-t from-[#09090d] via-[#09090d]/15 to-black/10"/>
             <div className="absolute bottom-10 left-10 right-10">
               <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-[#f04455]/25 bg-[#e50914]/10 px-3 py-1.5 text-[9px] font-bold tracking-[.24em] text-[#ff8791]"><Sparkles size={12}/> SEU UNIVERSO, SEM LIMITES</div>
