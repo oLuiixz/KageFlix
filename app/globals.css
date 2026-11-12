@@ -526,3 +526,37 @@ button, a, input, select, textarea { min-width: 0; }
   .kf-anime-hero { min-height: 540px; }
   .kf-login > section { padding-top: 10px !important; padding-bottom: 16px !important; }
 }
+
+
+/* Respect device safe areas in installed PWAs (notch, Dynamic Island and home indicator). */
+@media (max-width: 767px) {
+  .kf-app {
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
+    padding-bottom: calc(76px + env(safe-area-inset-bottom, 0px));
+  }
+  .kf-app .kf-header {
+    top: 0;
+    padding-top: env(safe-area-inset-top, 0px);
+    scroll-margin-top: env(safe-area-inset-top, 0px);
+  }
+  .kf-app .kf-mobile-nav {
+    left: max(10px, env(safe-area-inset-left, 0px));
+    right: max(10px, env(safe-area-inset-right, 0px));
+    bottom: max(8px, env(safe-area-inset-bottom, 0px));
+    margin-bottom: 0;
+  }
+  .kf-app .fixed.inset-0 {
+    padding-top: max(12px, env(safe-area-inset-top, 0px));
+    padding-bottom: max(12px, env(safe-area-inset-bottom, 0px));
+    padding-left: max(10px, env(safe-area-inset-left, 0px));
+    padding-right: max(10px, env(safe-area-inset-right, 0px));
+  }
+  .kf-login {
+    padding-top: env(safe-area-inset-top, 0px);
+    padding-left: env(safe-area-inset-left, 0px);
+    padding-right: env(safe-area-inset-right, 0px);
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+}
