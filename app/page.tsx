@@ -86,7 +86,6 @@ export default function LoginPage() {
 
         <div className="mx-auto w-full max-w-[480px] lg:mr-auto">
           <div className="mb-8 lg:hidden">
-            <img src="/kageflix-logo.svg" alt="KageFlix" className="mb-5 h-12 w-auto object-contain object-left"/>
             <p className="mb-2 text-[10px] font-bold tracking-[.25em] text-[#ff6878]">BEM-VINDO À KAGEFLIX</p>
             <h1 className="text-4xl font-black leading-tight tracking-[-.05em]">Sua próxima história <span className="text-[#ef4054]">espera por você.</span></h1>
           </div>
