@@ -325,6 +325,7 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid 
 }
 .kf-content-loader-wrap {
   display: flex;
+  gap: .85rem;
   min-height: 13rem;
   width: 100%;
   flex-direction: column;
@@ -332,6 +333,11 @@ button:focus-visible, a:focus-visible, input:focus-visible { outline: 2px solid 
   justify-content: center;
 }
 .kf-content-loader-wrap--compact { min-height: 0; }
+.kf-content-loader-label {
+  color: #a1a1aa;
+  font-size: .875rem;
+  text-align: center;
+}
 .kf-content-loader {
   display: block;
   width: 50px;
